@@ -15,17 +15,17 @@ from pathlib import Path
 SERVER_DATA_ROOT = "/sharedata01/CNN_data"
 GLEAMER_DATA_ROOT = "/sharedata01/CNN_data/gleamer/gleamer"
 
+# Output directories (define first)
+DATA_ROOT = SERVER_DATA_ROOT  # For our processed data
+OUTPUT_ROOT = os.path.join(DATA_ROOT, "medical_classification")
+
 # Dataset paths - use preprocessed data
 CSV_FILE = os.path.join(OUTPUT_ROOT, "preprocessed", "binary_medical_dataset.csv")
-DATA_ROOT = SERVER_DATA_ROOT  # For our processed data
 EXISTING_IMAGES_DIR = GLEAMER_DATA_ROOT  # Where images are already stored
 
 print(f"✅ Using server data path: {DATA_ROOT}")
 print(f"✅ Using existing images from: {EXISTING_IMAGES_DIR}")
 print(f"✅ CSV file location: {CSV_FILE}")
-
-# Output directories
-OUTPUT_ROOT = os.path.join(DATA_ROOT, "medical_classification")
 CHECKPOINTS_DIR = os.path.join(OUTPUT_ROOT, "checkpoints")
 RESULTS_DIR = os.path.join(OUTPUT_ROOT, "results")
 LOGS_DIR = os.path.join(OUTPUT_ROOT, "logs")
