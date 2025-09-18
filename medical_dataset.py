@@ -1,218 +1,322 @@
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-import requests
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+import numpy as np
 from PIL import Image
 import io
-import numpy as np
-from transformers import AutoTokenizer, AutoModel
+import os
+import logging
+from pathlib import Path
 from lib.monai.transforms import (
     Compose, LoadImaged, EnsureChannelFirstd, 
     ScaleIntensityd, Resized, ToTensord,
     RandRotated, RandZoomed, RandFlipd, 
-    RandGaussianNoised, RandAdjustContrastd
+    RandGaussianNoised, RandAdjustContrastd,
+    RandAffined, RandGaussianSmoothd
 )
-import json
-import ast
-import logging
-from pathlib import Path
-import os
 from config import (
     CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, 
     TRAINING_CONFIG, PREPROCESSING_CONFIG, 
-    LOGGING_CONFIG
+    LOGGING_CONFIG, BINARY_CONFIG
 )
 
-class MedicalDataset(Dataset):
-    """Dataset for medical image classification with text"""
+class BinaryMedicalDataset(Dataset):
+    """Binary Classification Dataset for Medical Image Fracture Detection"""
     
-    def __init__(self, csv_file=None, transform=None, text_transform=None, mode='train', max_length=None):
+    def __init__(self, csv_file=None, transform=None, mode='train', use_valid_images_only=True):
         # Use config defaults if not provided
         csv_file = csv_file or CSV_FILE
-        max_length = max_length or TRAINING_CONFIG['text_max_length']
         
         self.data = pd.read_csv(csv_file)
         self.transform = transform
-        self.text_transform = text_transform
         self.mode = mode
-        self.max_length = max_length
+        self.use_valid_images_only = use_valid_images_only
         
-        # Initialize text tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+        # Filter data for binary classification
+        self._filter_data()
         
-        # Split data for train/val/test based on config
+        # Split data for train/val/test
+        self._split_data()
+        
+        # Setup logging
+        logging.basicConfig(level=getattr(logging, LOGGING_CONFIG['log_level']))
+        self.logger = logging.getLogger(__name__)
+        
+        self.logger.info(f"📊 {mode} dataset initialized with {len(self.data)} samples")
+    
+    def _filter_data(self):
+        """Filter data for binary classification"""
+        original_count = len(self.data)
+        
+        # Exclude DOUBT cases if configured
+        if TRAINING_CONFIG.get('exclude_doubt_cases', True):
+            self.data = self.data[self.data['GLEAMER_FINDING'] != 'DOUBT']
+            self.logger.info(f"🚫 Excluded DOUBT cases: {original_count} → {len(self.data)}")
+        
+        # Filter valid images only if configured
+        if self.use_valid_images_only:
+            # This will be handled in __getitem__ method
+            pass
+        
+        # Map labels to binary classification
+        self.data = self.data[self.data['GLEAMER_FINDING'].isin(['POSITIVE', 'NEGATIVE'])]
+        self.data['label'] = self.data['GLEAMER_FINDING'].map(BINARY_CONFIG['label_mapping'])
+        
+        self.logger.info(f"🏷️ Binary labels: POSITIVE={sum(self.data['label']==1)}, NEGATIVE={sum(self.data['label']==0)}")
+    
+    def _split_data(self):
+        """Split data into train/val/test sets"""
         total_len = len(self.data)
         train_end = int((1 - TRAINING_CONFIG['val_split'] - TRAINING_CONFIG['test_split']) * total_len)
         val_end = int((1 - TRAINING_CONFIG['test_split']) * total_len)
         
-        if mode == 'train':
+        if self.mode == 'train':
             self.data = self.data.iloc[:train_end]
-        elif mode == 'val':
+        elif self.mode == 'val':
             self.data = self.data.iloc[train_end:val_end]
-        else:  # test
+        elif self.mode == 'test':
             self.data = self.data.iloc[val_end:]
+        
+        self.logger.info(f"📊 {self.mode} split: {len(self.data)} samples")
+    
+    def _find_image_file(self, uid):
+        """Find image file for given UID"""
+        base_dir = "/sharedata01/CNN_data/gleamer/gleamer"
+        possible_extensions = ['.jpg', '.jpeg', '.png', '.dcm']
+        
+        for ext in possible_extensions:
+            # Check main directory
+            image_path = os.path.join(base_dir, f"{uid}{ext}")
+            if os.path.exists(image_path):
+                return image_path
+            
+            # Check subdirectories
+            for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2']:
+                image_path = os.path.join(base_dir, subdir, f"{uid}{ext}")
+                if os.path.exists(image_path):
+                    return image_path
+        
+        return None
+    
+    def _is_valid_image(self, image_path):
+        """Check if image is valid (not blank)"""
+        try:
+            with Image.open(image_path) as img:
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                img_array = np.array(img)
+                
+                # Check if all pixels are the same color (blank)
+                if len(img_array.shape) == 3:
+                    if np.all(img_array == img_array[0, 0]):
+                        return False
+                    
+                    # Check variance - very low variance indicates blank image
+                    variance = np.var(img_array)
+                    if variance < 10:
+                        return False
+                else:
+                    if np.all(img_array == img_array[0, 0]):
+                        return False
+                    variance = np.var(img_array)
+                    if variance < 10:
+                        return False
+                
+                return True
+        except Exception as e:
+            self.logger.warning(f"⚠️ Error checking image {image_path}: {e}")
+            return False
     
     def __len__(self):
         return len(self.data)
     
-    def load_image_from_path(self, image_path):
-        """Load image from local path"""
-        try:
-            if image_path and os.path.exists(image_path):
-                image = Image.open(image_path).convert('RGB')
-                
-                # Validate image size
-                width, height = image.size
-                min_size = PREPROCESSING_CONFIG['min_image_size']
-                max_size = PREPROCESSING_CONFIG['max_image_size']
-                
-                if width < min_size[0] or height < min_size[1] or width > max_size[0] or height > max_size[1]:
-                    if PREPROCESSING_CONFIG['skip_corrupt_images']:
-                        print(f"Warning: Image size {width}x{height} outside valid range, skipping")
-                        return None
-                
-                return np.array(image)
-            else:
-                # Return black image as fallback if path doesn't exist
-                return np.zeros(PREPROCESSING_CONFIG['image_size'] + (3,), dtype=np.uint8)
-                
-        except Exception as e:
-            print(f"Error loading image from {image_path}: {e}")
-            # Return black image as fallback
-            return np.zeros(PREPROCESSING_CONFIG['image_size'] + (3,), dtype=np.uint8)
-    
     def __getitem__(self, idx):
+        """Get a single sample from the dataset"""
         row = self.data.iloc[idx]
         
-        # Load and process images
-        image_urls = ast.literal_eval(row['download_urls'])
-        images = []
+        # Get label
+        label = int(row['label'])  # 0 for NEGATIVE, 1 for POSITIVE
         
-        # Use configured number of images or pad with zeros
-        max_images = TRAINING_CONFIG['max_images_per_study']
-        for i in range(max_images):
-            if i < len(image_urls):
-                image = self.load_image_from_url(image_urls[i])
-                if image is None:  # Skip corrupted images
-                    image = np.zeros(PREPROCESSING_CONFIG['image_size'] + (3,), dtype=np.uint8)
+        # Parse UIDs from SOP_INSTANCE_UID_ARRAY
+        uid_string = str(row['SOP_INSTANCE_UID_ARRAY'])
+        try:
+            # Parse UIDs (assuming comma-separated or JSON-like format)
+            if ',' in uid_string:
+                uids = [uid.strip().strip('"\'[]') for uid in uid_string.split(',')]
             else:
-                image = np.zeros(PREPROCESSING_CONFIG['image_size'] + (3,), dtype=np.uint8)
+                uids = [uid_string.strip().strip('"\'[]')]
             
-            if self.transform:
-                image = self.transform(image)
-            images.append(image)
+            # Find first valid image
+            image_path = None
+            for uid in uids:
+                if uid and uid != 'nan':
+                    uid = uid.strip()
+                    found_path = self._find_image_file(uid)
+                    if found_path and self._is_valid_image(found_path):
+                        image_path = found_path
+                        break
+            
+            if image_path is None:
+                # No valid image found, skip this sample
+                return self.__getitem__((idx + 1) % len(self.data))
+            
+            # Load image
+            try:
+                with Image.open(image_path) as img:
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+                    
+                    # Convert to numpy array
+                    image = np.array(img)
+                    
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error loading image {image_path}: {e}")
+                return self.__getitem__((idx + 1) % len(self.data))
+            
+        except Exception as e:
+            self.logger.warning(f"⚠️ Error processing UIDs for row {idx}: {e}")
+            return self.__getitem__((idx + 1) % len(self.data))
         
-        # Stack images: (3, H, W) for RGB
-        images = torch.stack(images)
-        
-        # Process text data
-        clinical_text = f"{row['clinical_indication']} {row['exam_technique']} {row['findings']}"
-        clinical_text = clinical_text.replace('\n', ' ').strip()
-        
-        text_encoding = self.tokenizer(
-            clinical_text,
-            truncation=True,
-            padding='max_length',
-            max_length=self.max_length,
-            return_tensors='pt'
-        )
-        
-        # Labels
-        label = 1 if row['GLEAMER_FINDING'] == 'POSITIVE' else 0
+        # Apply transforms
+        if self.transform:
+            # Convert to PIL Image for transforms
+            image = Image.fromarray(image)
+            image = self.transform(image)
         
         return {
-            'images': images,
-            'text_input_ids': text_encoding['input_ids'].squeeze(0),
-            'text_attention_mask': text_encoding['attention_mask'].squeeze(0),
+            'image': image,
             'label': torch.tensor(label, dtype=torch.long),
-            'clinical_text': clinical_text,
-            'body_part': row['BODY_PART_ARRAY'],
-            'study_description': row['STUDY_DESCRIPTION']
+            'uid': uids[0] if uids else '',
+            'gleamer_finding': row['GLEAMER_FINDING']
         }
 
-# Data transforms
 def get_transforms(mode='train'):
-    """Get data transforms for training or validation"""
-    if mode == 'train' and PREPROCESSING_CONFIG['use_augmentation']:
-        prob = PREPROCESSING_CONFIG['augmentation_prob']
-        return Compose([
-            RandRotated(keys=["image"], prob=prob*0.3, range_x=0.1),
-            RandZoomed(keys=["image"], prob=prob*0.3, min_zoom=0.9, max_zoom=1.1),
-            RandFlipd(keys=["image"], prob=prob*0.3),
-            RandGaussianNoised(keys=["image"], prob=prob*0.2, std=0.01),
-            RandAdjustContrastd(keys=["image"], prob=prob*0.2, gamma=(0.8, 1.2))
+    """Get data transforms for training/validation"""
+    
+    if mode == 'train':
+        # Training transforms with heavy augmentation
+        transform = Compose([
+            Resized(keys=["image"], spatial_size=(224, 224)),
+            RandRotated(keys=["image"], range_x=15, prob=0.5),
+            RandZoomed(keys=["image"], min_zoom=0.8, max_zoom=1.2, prob=0.5),
+            RandFlipd(keys=["image"], prob=0.5),
+            RandGaussianNoised(keys=["image"], std=0.01, prob=0.3),
+            RandAdjustContrastd(keys=["image"], gamma=(0.8, 1.2), prob=0.3),
+            RandGaussianSmoothd(keys=["image"], sigma_x=(0.5, 1.0), prob=0.3),
+            ScaleIntensityd(keys=["image"], minv=0.0, maxv=1.0),
+            ToTensord(keys=["image"])
         ])
     else:
-        return None
+        # Validation/test transforms (no augmentation)
+        transform = Compose([
+            Resized(keys=["image"], spatial_size=(224, 224)),
+            ScaleIntensityd(keys=["image"], minv=0.0, maxv=1.0),
+            ToTensord(keys=["image"])
+        ])
+    
+    return transform
 
-def create_data_loaders(csv_file=None, batch_size=None, num_workers=None):
+def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True):
     """Create data loaders for training and validation"""
     
-    # Use config defaults if not provided
-    csv_file = csv_file or CSV_FILE
     batch_size = batch_size or TRAINING_CONFIG['batch_size']
     num_workers = num_workers or TRAINING_CONFIG['num_workers']
     
-    # Training transforms
-    train_transforms = get_transforms('train')
-    
     # Create datasets
-    train_dataset = MedicalDataset(
-        csv_file, 
-        transform=train_transforms, 
+    train_dataset = BinaryMedicalDataset(
+        transform=get_transforms('train'),
         mode='train'
     )
     
-    val_dataset = MedicalDataset(
-        csv_file, 
-        transform=None, 
+    val_dataset = BinaryMedicalDataset(
+        transform=get_transforms('val'),
         mode='val'
     )
     
-    test_dataset = MedicalDataset(
-        csv_file, 
-        transform=None, 
+    test_dataset = BinaryMedicalDataset(
+        transform=get_transforms('val'),
         mode='test'
     )
     
+    # Create samplers for class balancing
+    train_sampler = None
+    if balance_classes and TRAINING_CONFIG.get('balance_classes', True):
+        # Calculate class weights
+        class_counts = train_dataset.data['label'].value_counts().sort_index()
+        class_weights = 1.0 / class_counts.values
+        sample_weights = [class_weights[label] for label in train_dataset.data['label']]
+        
+        train_sampler = WeightedRandomSampler(
+            weights=sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True
+        )
+    
     # Create data loaders
     train_loader = DataLoader(
-        train_dataset, 
-        batch_size=batch_size, 
-        shuffle=True, 
+        train_dataset,
+        batch_size=batch_size,
+        sampler=train_sampler,
+        shuffle=(train_sampler is None),
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=True,
+        drop_last=True
     )
     
     val_loader = DataLoader(
-        val_dataset, 
-        batch_size=batch_size, 
-        shuffle=False, 
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=True,
+        drop_last=False
     )
     
     test_loader = DataLoader(
-        test_dataset, 
-        batch_size=batch_size, 
-        shuffle=False, 
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=True,
+        drop_last=False
     )
     
     return train_loader, val_loader, test_loader
 
+def get_dataset_stats():
+    """Get dataset statistics"""
+    dataset = BinaryMedicalDataset(mode='train')
+    
+    stats = {
+        'total_samples': len(dataset),
+        'positive_samples': sum(dataset.data['label'] == 1),
+        'negative_samples': sum(dataset.data['label'] == 0),
+        'positive_ratio': sum(dataset.data['label'] == 1) / len(dataset),
+        'negative_ratio': sum(dataset.data['label'] == 0) / len(dataset)
+    }
+    
+    return stats
+
 if __name__ == "__main__":
-    # Test dataset
-    train_loader, val_loader = create_data_loaders("dicom_image_url_file.csv")
+    # Test dataset creation
+    print("🧪 Testing Binary Medical Dataset...")
     
-    print(f"Training samples: {len(train_loader.dataset)}")
-    print(f"Validation samples: {len(val_loader.dataset)}")
+    # Create datasets
+    train_loader, val_loader, test_loader = create_data_loaders(batch_size=4)
     
-    # Test batch
+    # Test loading
     for batch in train_loader:
-        print(f"Image shape: {batch['images'].shape}")
-        print(f"Text input shape: {batch['text_input_ids'].shape}")
-        print(f"Labels: {batch['label']}")
+        print(f"✅ Batch loaded successfully:")
+        print(f"   Images: {batch['image'].shape}")
+        print(f"   Labels: {batch['label'].shape}")
+        print(f"   Label distribution: {batch['label'].unique(return_counts=True)}")
         break
+    
+    # Print dataset stats
+    stats = get_dataset_stats()
+    print(f"📊 Dataset Statistics:")
+    print(f"   Total samples: {stats['total_samples']}")
+    print(f"   Positive: {stats['positive_samples']} ({stats['positive_ratio']:.1%})")
+    print(f"   Negative: {stats['negative_samples']} ({stats['negative_ratio']:.1%})")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Configuration file for Medical Image Classification
-H200 GPU Server Setup
+Configuration file for Binary Medical Image Classification
+H200 GPU Server Setup - Fracture Detection
 """
 
 import os
@@ -40,50 +40,24 @@ for dir_path in [OUTPUT_ROOT, CHECKPOINTS_DIR, RESULTS_DIR, LOGS_DIR, PREPROCESS
 # MODEL CONFIGURATION
 # =============================================================================
 
-# Model types to train
+# Binary Classification Model
 MODELS_TO_TRAIN = {
-    "image_densenet": True,
-    "image_efficientnet": True,
-    "multimodal_densenet": True,
-    "multimodal_efficientnet": True,
-    "ensemble": True
+    "binary_classifier": True,  # Single binary classifier
 }
 
-# Model-specific configurations
+# Binary Classification Model Configuration
 MODEL_CONFIGS = {
-    "image_densenet": {
-        "model_type": "ImageOnlyDenseNet",
+    "binary_classifier": {
+        "model_type": "BinaryEfficientNet",
+        "model_name": "efficientnet-b7",  # Best performance model
         "pretrained": True,
         "freeze_backbone": False,
         "dropout_rate": 0.3,
-        "feature_dim": 1024
-    },
-    "image_efficientnet": {
-        "model_type": "ImageOnlyEfficientNet", 
-        "model_name": "efficientnet-b0",
-        "pretrained": True,
-        "freeze_backbone": False,
-        "dropout_rate": 0.3,
-        "feature_dim": 1280
-    },
-    "multimodal_densenet": {
-        "model_type": "MultimodalDenseNet",
-        "text_model": "bert-base-uncased",
-        "pretrained": True,
-        "freeze_backbone": False,
-        "freeze_text_model": False,
-        "dropout_rate": 0.3,
-        "fusion_dim": 512
-    },
-    "multimodal_efficientnet": {
-        "model_type": "MultimodalEfficientNet",
-        "text_model": "bert-base-uncased",
-        "model_name": "efficientnet-b0",
-        "pretrained": True,
-        "freeze_backbone": False,
-        "freeze_text_model": False,
-        "dropout_rate": 0.3,
-        "fusion_dim": 512
+        "num_classes": 2,  # POSITIVE, NEGATIVE
+        "class_names": ["NEGATIVE", "POSITIVE"],
+        "use_focal_loss": True,  # Handle class imbalance
+        "focal_alpha": 0.25,
+        "focal_gamma": 2.0
     }
 }
 
@@ -91,19 +65,24 @@ MODEL_CONFIGS = {
 # TRAINING CONFIGURATION
 # =============================================================================
 
-# General training parameters
+# Binary Classification Training Configuration
 TRAINING_CONFIG = {
     # Data parameters
-    "batch_size": 16,  # Reduced for H200 memory optimization
+    "batch_size": 32,  # Optimized for binary classification
     "num_workers": 8,  # H200 server can handle more workers
-    "max_images_per_study": 3,
-    "text_max_length": 512,
+    "use_valid_images_only": True,  # Filter out blank images
+    "exclude_doubt_cases": True,  # Remove DOUBT cases
     
     # Training parameters
     "num_epochs": 50,
     "learning_rate": 1e-4,
     "weight_decay": 1e-5,
     "warmup_epochs": 5,
+    
+    # Class balancing
+    "balance_classes": True,  # Balance POSITIVE/NEGATIVE
+    "class_weights": [1.0, 1.2],  # Weight NEGATIVE slightly more
+    "augment_positive_class": True,  # Heavy augmentation for POSITIVE
     
     # Optimization
     "use_amp": True,  # Automatic Mixed Precision for H200
@@ -121,8 +100,8 @@ TRAINING_CONFIG = {
     # Checkpointing
     "save_every_n_epochs": 5,
     "save_best_only": True,
-    "monitor_metric": "val_auc",
-    "mode": "max"  # max for AUC, min for loss
+    "monitor_metric": "val_accuracy",  # Monitor accuracy for binary classification
+    "mode": "max"  # max for accuracy
 }
 
 # H200 GPU specific settings
@@ -189,15 +168,26 @@ LOGGING_CONFIG = {
 }
 
 # =============================================================================
-# ENSEMBLE CONFIGURATION
+# BINARY CLASSIFICATION SPECIFIC CONFIG
 # =============================================================================
 
-ENSEMBLE_CONFIG = {
-    "methods": ["voting", "averaging", "weighted", "stacking"],
-    "voting_method": "soft",  # soft or hard
-    "stacking_cv_folds": 5,
-    "weight_optimization": True,
-    "meta_learner": "logistic_regression"
+BINARY_CONFIG = {
+    # Label mapping
+    "label_mapping": {
+        "NEGATIVE": 0,
+        "POSITIVE": 1
+    },
+    "exclude_labels": ["DOUBT"],  # Exclude uncertain cases
+    
+    # Performance targets
+    "target_accuracy": 0.85,  # 85% accuracy target
+    "target_precision": 0.80,  # 80% precision for POSITIVE
+    "target_recall": 0.80,    # 80% recall for POSITIVE
+    
+    # Inference settings
+    "confidence_threshold": 0.5,
+    "top_k_predictions": 2,
+    "save_predictions": True
 }
 
 # =============================================================================
@@ -219,16 +209,20 @@ def get_results_path(model_name, metric_name):
 
 def print_config():
     """Print current configuration"""
-    print("🔧 Medical Image Classification Configuration")
-    print("=" * 50)
+    print("🔧 Binary Medical Image Classification Configuration")
+    print("=" * 60)
     print(f"📁 Data Root: {DATA_ROOT}")
     print(f"📊 CSV File: {CSV_FILE}")
     print(f"💾 Output Root: {OUTPUT_ROOT}")
     print(f"🖥️  Device: {GPU_CONFIG['device']}")
     print(f"📦 Batch Size: {TRAINING_CONFIG['batch_size']}")
     print(f"🔄 Epochs: {TRAINING_CONFIG['num_epochs']}")
-    print(f"📚 Models to Train: {list(MODELS_TO_TRAIN.keys())}")
-    print("=" * 50)
+    print(f"🎯 Model: {MODEL_CONFIGS['binary_classifier']['model_name']}")
+    print(f"🏷️  Classes: {MODEL_CONFIGS['binary_classifier']['num_classes']} (POSITIVE/NEGATIVE)")
+    print(f"📊 Target Accuracy: {BINARY_CONFIG['target_accuracy']*100}%")
+    print(f"⚖️  Class Balancing: {TRAINING_CONFIG['balance_classes']}")
+    print(f"🚫 Exclude DOUBT: {TRAINING_CONFIG['exclude_doubt_cases']}")
+    print("=" * 60)
 
 if __name__ == "__main__":
     print_config()
