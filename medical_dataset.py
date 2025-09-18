@@ -246,6 +246,19 @@ class BinaryMedicalDataset(Dataset):
             data_dict = self.transform(data_dict)
             image = data_dict['image']
         
+        # Ensure image is a proper tensor with correct dimensions
+        if isinstance(image, np.ndarray):
+            image = torch.from_numpy(image).float()
+        
+        # Ensure image has 4 dimensions: [C, H, W] or [H, W, C]
+        if image.dim() == 2:  # [H, W]
+            image = image.unsqueeze(0)  # Add channel dimension -> [1, H, W]
+        elif image.dim() == 3:
+            if image.shape[0] == 3 or image.shape[0] == 1:  # [C, H, W]
+                pass  # Already correct format
+            else:  # [H, W, C]
+                image = image.permute(2, 0, 1)  # Convert to [C, H, W]
+        
         return {
             'image': image,
             'label': torch.tensor(label, dtype=torch.long),
@@ -278,6 +291,36 @@ def get_transforms(mode='train'):
         ])
     
     return transform
+
+def custom_collate_fn(batch):
+    """Custom collate function to handle tensor dimension issues"""
+    images = []
+    labels = []
+    uids = []
+    gleamer_findings = []
+    
+    for item in batch:
+        # Ensure consistent image dimensions
+        image = item['image']
+        if isinstance(image, torch.Tensor):
+            # Ensure [C, H, W] format
+            if image.dim() == 2:  # [H, W]
+                image = image.unsqueeze(0)  # [1, H, W]
+            elif image.dim() == 3:
+                if image.shape[0] not in [1, 3]:  # [H, W, C]
+                    image = image.permute(2, 0, 1)  # [C, H, W]
+        
+        images.append(image)
+        labels.append(item['label'])
+        uids.append(item['uid'])
+        gleamer_findings.append(item['gleamer_finding'])
+    
+    return {
+        'image': torch.stack(images),
+        'label': torch.stack(labels),
+        'uid': uids,
+        'gleamer_finding': gleamer_findings
+    }
 
 def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True):
     """Create data loaders for training and validation"""
@@ -315,7 +358,7 @@ def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True)
             replacement=True
         )
     
-    # Create data loaders
+    # Create data loaders with custom collate function
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
@@ -323,7 +366,8 @@ def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True)
         shuffle=(train_sampler is None),
         num_workers=num_workers,
         pin_memory=True,
-        drop_last=True
+        drop_last=True,
+        collate_fn=custom_collate_fn
     )
     
     val_loader = DataLoader(
@@ -332,7 +376,8 @@ def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True)
         shuffle=False,
         num_workers=num_workers,
         pin_memory=True,
-        drop_last=False
+        drop_last=False,
+        collate_fn=custom_collate_fn
     )
     
     test_loader = DataLoader(
@@ -341,7 +386,8 @@ def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True)
         shuffle=False,
         num_workers=num_workers,
         pin_memory=True,
-        drop_last=False
+        drop_last=False,
+        collate_fn=custom_collate_fn
     )
     
     return train_loader, val_loader, test_loader
