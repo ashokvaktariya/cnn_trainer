@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lib.monai.networks.nets import EfficientNet
+try:
+    from monai.networks.nets import EfficientNet
+except ImportError:
+    # Fallback to lib if direct import fails
+    from lib.monai.networks.nets import EfficientNet
 import numpy as np
 
 # =============================================================================

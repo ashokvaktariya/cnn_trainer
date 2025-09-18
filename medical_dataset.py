@@ -8,13 +8,23 @@ import io
 import os
 import logging
 from pathlib import Path
-from lib.monai.transforms import (
-    Compose, LoadImaged, EnsureChannelFirstd, 
-    ScaleIntensityd, Resized, ToTensord,
-    RandRotated, RandZoomed, RandFlipd, 
-    RandGaussianNoised, RandAdjustContrastd,
-    RandAffined, RandGaussianSmoothd
-)
+try:
+    from monai.transforms import (
+        Compose, LoadImaged, EnsureChannelFirstd, 
+        ScaleIntensityd, Resized, ToTensord,
+        RandRotated, RandZoomed, RandFlipd, 
+        RandGaussianNoised, RandAdjustContrastd,
+        RandAffined, RandGaussianSmoothd
+    )
+except ImportError:
+    # Fallback to lib if direct import fails
+    from lib.monai.transforms import (
+        Compose, LoadImaged, EnsureChannelFirstd, 
+        ScaleIntensityd, Resized, ToTensord,
+        RandRotated, RandZoomed, RandFlipd, 
+        RandGaussianNoised, RandAdjustContrastd,
+        RandAffined, RandGaussianSmoothd
+    )
 from config import (
     CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, 
     TRAINING_CONFIG, PREPROCESSING_CONFIG, 
