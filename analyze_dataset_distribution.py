@@ -8,17 +8,20 @@ This script analyzes the dataset to show:
 - Overall dataset statistics
 
 Usage Examples:
-    # Analyze full dataset with images (slow)
+    # Analyze full dataset with images and detailed logs (slow)
     python3 analyze_dataset_distribution.py
     
-    # Analyze only CSV labels (fast)
+    # Analyze only CSV labels with logs (fast)
     python3 analyze_dataset_distribution.py --csv-only
     
-    # Analyze sample of 1000 records with images
-    python3 analyze_dataset_distribution.py --sample-size 1000
+    # Analyze sample of 1000 records with images and verbose logging
+    python3 analyze_dataset_distribution.py --sample-size 1000 --verbose
     
-    # Analyze specific CSV file
-    python3 analyze_dataset_distribution.py --csv /path/to/file.csv --csv-only
+    # Analyze specific CSV file with full logging
+    python3 analyze_dataset_distribution.py --csv /path/to/file.csv --verbose
+    
+    # Quick CSV analysis without image processing
+    python3 analyze_dataset_distribution.py --csv-only --sample-size 100
 """
 
 import os
@@ -69,7 +72,7 @@ def is_blank_image(image_path):
         print(f"Error checking image {image_path}: {e}")
         return True  # Assume blank if we can't read it
 
-def find_image_files(uid, base_dir):
+def find_image_files(uid, base_dir, verbose=False):
     """Find image files for a given UID in the server directory structure"""
     possible_extensions = ['.jpg', '.jpeg', '.png', '.dcm']
     possible_paths = []
@@ -79,12 +82,16 @@ def find_image_files(uid, base_dir):
         main_path = os.path.join(base_dir, f"{uid}{ext}")
         if os.path.exists(main_path):
             possible_paths.append(main_path)
+            if verbose:
+                print(f"      📁 Found in main dir: {main_path}")
         
         # Check in common subdirectories
         for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2', 'gleamer']:
             subdir_path = os.path.join(base_dir, subdir, f"{uid}{ext}")
             if os.path.exists(subdir_path):
                 possible_paths.append(subdir_path)
+                if verbose:
+                    print(f"      📁 Found in subdir: {subdir_path}")
         
         # Also check if there are nested directories (common in medical imaging)
         try:
@@ -92,10 +99,14 @@ def find_image_files(uid, base_dir):
                 for file in files:
                     if file == f"{uid}{ext}":
                         possible_paths.append(os.path.join(root, file))
+                        if verbose:
+                            print(f"      📁 Found in nested dir: {os.path.join(root, file)}")
                         break
                 if possible_paths:  # Found at least one, break outer loop
                     break
-        except Exception:
+        except Exception as e:
+            if verbose:
+                print(f"      ⚠️ Error walking directory: {e}")
             pass  # Skip if directory traversal fails
     
     return possible_paths
@@ -127,6 +138,21 @@ def analyze_dataset_distribution(csv_file=None, sample_size=None, check_images=T
     try:
         df = pd.read_csv(csv_file)
         print(f"📊 CSV loaded: {len(df)} records")
+        print(f"📋 CSV columns: {list(df.columns)}")
+        
+        # Check for required columns
+        if 'GLEAMER_FINDING' in df.columns:
+            print(f"✅ GLEAMER_FINDING column found")
+            unique_labels = df['GLEAMER_FINDING'].value_counts()
+            print(f"📊 Unique labels in CSV: {dict(unique_labels)}")
+        else:
+            print(f"⚠️ GLEAMER_FINDING column not found!")
+            
+        if 'SOP_INSTANCE_UID_ARRAY' in df.columns:
+            print(f"✅ SOP_INSTANCE_UID_ARRAY column found")
+        else:
+            print(f"⚠️ SOP_INSTANCE_UID_ARRAY column not found!")
+            
     except Exception as e:
         print(f"❌ Error reading CSV: {e}")
         return
@@ -143,10 +169,11 @@ def analyze_dataset_distribution(csv_file=None, sample_size=None, check_images=T
     
     # Process each row
     print("\n🔍 Analyzing dataset distribution...")
+    print(f"📊 Processing {len(df)} records...")
     
     for idx, row in df.iterrows():
-        if idx % 1000 == 0:
-            print(f"   Processed {idx}/{len(df)} records...")
+        if idx % 100 == 0:
+            print(f"   📈 Progress: {idx}/{len(df)} records ({idx/len(df)*100:.1f}%)")
         
         # Get label from GLEAMER_FINDING column
         if 'GLEAMER_FINDING' in row and pd.notna(row['GLEAMER_FINDING']):
@@ -169,23 +196,41 @@ def analyze_dataset_distribution(csv_file=None, sample_size=None, check_images=T
                     else:
                         uids = [uid_string.strip().strip('"\'[]')]
                     
+                    # Log UID processing for first few records
+                    if idx < 5:
+                        print(f"   🔍 Record {idx}: Found {len(uids)} UIDs for label '{label}'")
+                    
                     # Check each image
-                    for uid in uids:
+                    for uid_idx, uid in enumerate(uids):
                         if uid and uid != 'nan':
                             uid = uid.strip()
                             total_images[label] += 1
                             
+                            # Log first few UIDs
+                            if idx < 3 and uid_idx < 2:
+                                print(f"      🖼️ Checking UID: {uid[:50]}...")
+                            
                             # Find image file
-                            image_paths = find_image_files(uid, base_dir)
+                            verbose_logging = idx < 3 and uid_idx < 2  # Verbose for first few
+                            image_paths = find_image_files(uid, base_dir, verbose=verbose_logging)
                             if image_paths:
                                 if is_blank_image(image_paths[0]):
                                     blank_counts[label] += 1
+                                    if idx < 5:
+                                        print(f"      ⚫ Blank image found: {os.path.basename(image_paths[0])}")
+                                else:
+                                    if idx < 5:
+                                        print(f"      ✅ Valid image found: {os.path.basename(image_paths[0])}")
                             else:
                                 # Image not found - count as missing
                                 blank_counts[label] += 1
+                                if idx < 5:
+                                    print(f"      ❌ Image not found: {uid[:50]}...")
                 
                 except Exception as e:
                     print(f"   ⚠️ Error processing UIDs for row {idx}: {e}")
+                    if idx < 10:  # Show more details for first few errors
+                        print(f"      📄 Row data: {dict(row)}")
     
     # Print results
     print("\n" + "="*60)
@@ -254,6 +299,32 @@ def analyze_dataset_distribution(csv_file=None, sample_size=None, check_images=T
     if doubt_labels:
         print(f"❓ Doubt/Uncertain: {sum(label_counts[label] for label in doubt_labels):,} cases")
     
+    # Final detailed summary
+    print("\n" + "="*60)
+    print("📋 DETAILED FILE STRUCTURE ANALYSIS")
+    print("="*60)
+    
+    if check_images:
+        print(f"📁 Base directory: {base_dir}")
+        print(f"📊 Total images processed: {sum(total_images.values()):,}")
+        print(f"⚫ Total blank images: {sum(blank_counts.values()):,}")
+        print(f"✅ Total valid images: {sum(total_images.values()) - sum(blank_counts.values()):,}")
+        
+        # Show sample of file paths found
+        print(f"\n🔍 Sample file paths found:")
+        sample_count = 0
+        for label in label_counts.keys():
+            if sample_count >= 3:
+                break
+            if total_images.get(label, 0) > 0:
+                print(f"   📂 {label} label: {total_images[label]} images")
+                sample_count += 1
+    
+    print(f"\n📊 Processing completed:")
+    print(f"   ⏱️ Total records analyzed: {total_records:,}")
+    print(f"   🏷️ Unique labels found: {len(label_counts)}")
+    print(f"   📈 Label distribution: {dict(label_counts)}")
+    
     print("\n🎉 Analysis complete!")
     return {
         'label_counts': dict(label_counts),
@@ -263,13 +334,17 @@ def analyze_dataset_distribution(csv_file=None, sample_size=None, check_images=T
     }
 
 def main():
-    parser = argparse.ArgumentParser(description='Analyze dataset distribution')
+    parser = argparse.ArgumentParser(description='Analyze dataset distribution with detailed logging')
     parser.add_argument('--csv', type=str, help='Path to CSV file')
     parser.add_argument('--sample-size', type=int, help='Number of samples to analyze (for testing)')
     parser.add_argument('--no-images', action='store_true', help='Skip image analysis (faster)')
     parser.add_argument('--csv-only', action='store_true', help='Only analyze CSV labels (fastest)')
+    parser.add_argument('--verbose', action='store_true', help='Enable verbose logging for all records')
     
     args = parser.parse_args()
+    
+    print("🚀 Starting dataset distribution analysis...")
+    print(f"📋 Arguments: CSV={args.csv}, Sample={args.sample_size}, Images={not args.no_images and not args.csv_only}")
     
     # Run analysis
     analyze_dataset_distribution(
