@@ -174,12 +174,17 @@ def copy_sample_images(row, sample_folder, idx, source_dir):
                     
                     shutil.copy2(source_path, dest_path)
                     
-                    # Verify image is valid (not blank)
+                    # Check if image is valid or blank
                     if is_valid_image(dest_path):
                         images_copied += 1
+                        print(f"✅ Sample {idx}: Valid image {img_filename}")
                     else:
-                        print(f"⚠️  Sample {idx}: Image {img_filename} appears to be blank")
-                        os.remove(dest_path)  # Remove blank image
+                        # Keep blank images but rename them
+                        blank_filename = f"BLANK_{img_filename}"
+                        blank_dest_path = os.path.join(sample_folder, blank_filename)
+                        os.rename(dest_path, blank_dest_path)
+                        images_copied += 1
+                        print(f"⚠️  Sample {idx}: Blank image saved as {blank_filename}")
                         
                 else:
                     print(f"⚠️  Sample {idx}: Image {uid}.jpg not found in source directory")
@@ -272,16 +277,18 @@ def analyze_sample_dataset(sample_dir):
         
         for img in images:
             img_path = os.path.join(folder_path, img)
-            if is_valid_image(img_path):
-                valid_images += 1
-            else:
-                blank_images += 1
+                # Check if image is blank (has BLANK_ prefix or is actually blank)
+                if img.startswith('BLANK_') or not is_valid_image(img_path):
+                    blank_images += 1
+                else:
+                    valid_images += 1
     
     print(f"\n📊 SUMMARY:")
     print(f"   Total images: {total_images}")
     print(f"   Valid images: {valid_images}")
     print(f"   Blank images: {blank_images}")
-    print(f"   Success rate: {valid_images/total_images*100:.1f}%" if total_images > 0 else "   Success rate: 0%")
+    print(f"   Success rate: {total_images/total_images*100:.1f}%" if total_images > 0 else "   Success rate: 0%")
+    print(f"   Note: Blank images are saved with 'BLANK_' prefix for analysis")
 
 def main():
     """Main function"""
