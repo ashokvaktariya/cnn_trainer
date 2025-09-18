@@ -13,12 +13,16 @@ from pathlib import Path
 
 # Server data paths - assume we're running on server
 SERVER_DATA_ROOT = "/sharedata01/CNN_data"
+GLEAMER_DATA_ROOT = "/sharedata01/CNN_data/gleamer/gleamer"
 
-# Dataset paths - use server path directly
-CSV_FILE = os.path.join(SERVER_DATA_ROOT, "dicom_image_url_file.csv")
-DATA_ROOT = SERVER_DATA_ROOT
+# Dataset paths - use existing gleamer data
+CSV_FILE = os.path.join(GLEAMER_DATA_ROOT, "dicom_image_url_file.csv")
+DATA_ROOT = SERVER_DATA_ROOT  # For our processed data
+EXISTING_IMAGES_DIR = GLEAMER_DATA_ROOT  # Where images are already stored
 
 print(f"✅ Using server data path: {DATA_ROOT}")
+print(f"✅ Using existing images from: {EXISTING_IMAGES_DIR}")
+print(f"✅ CSV file location: {CSV_FILE}")
 
 # Output directories
 OUTPUT_ROOT = os.path.join(DATA_ROOT, "medical_classification")
@@ -152,7 +156,10 @@ PREPROCESSING_CONFIG = {
     
     # Caching
     "cache_preprocessed": True,
-    "cache_dir": PREPROCESSED_DIR
+    "cache_dir": PREPROCESSED_DIR,
+    
+    # Use existing images (skip download)
+    "use_existing_images": True
 }
 
 # =============================================================================

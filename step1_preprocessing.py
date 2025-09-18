@@ -22,7 +22,7 @@ import time
 
 from config import (
     CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, PREPROCESSING_CONFIG,
-    TRAINING_CONFIG, LOGGING_CONFIG
+    TRAINING_CONFIG, LOGGING_CONFIG, EXISTING_IMAGES_DIR
 )
 from image_alignment_system import ImageAlignmentSystem
 
@@ -94,68 +94,41 @@ class DatasetPreprocessor:
         except:
             return False
     
-    def download_and_validate_image(self, url, image_id, max_retries=3):
-        """Download and validate a single image, save locally with proper alignment"""
-        # Use alignment system to get proper file path
-        local_path = self.alignment_system.get_image_path(image_id, url)
-            
-            # Check if image already exists locally
-            if os.path.exists(local_path):
-                try:
-                    image = Image.open(local_path).convert('RGB')
-                    return {
-                        'image': np.array(image),
-                        'size': image.size,
-                        'valid': True,
-                        'local_path': local_path,
-                        'cached': True
-                    }
-                except Exception as e:
-                    logger.warning(f"Error loading cached image {local_path}: {e}")
-                    # Remove corrupted cached file
-                    os.remove(local_path)
-            
-            # Download image if not cached
-            for attempt in range(max_retries):
-                try:
-                    response = requests.get(url, timeout=10)
-                    if response.status_code != 200:
-                        continue
-                    
-                    # Try to open as image
-                    image = Image.open(io.BytesIO(response.content)).convert('RGB')
-                    
-                    # Validate size
-                    width, height = image.size
-                    min_size = PREPROCESSING_CONFIG['min_image_size']
-                    max_size = PREPROCESSING_CONFIG['max_image_size']
-                    
-                    if (width < min_size[0] or height < min_size[1] or 
-                        width > max_size[0] or height > max_size[1]):
-                        logger.warning(f"Image size {width}x{height} outside valid range")
-                        if PREPROCESSING_CONFIG['skip_corrupt_images']:
-                            return None
-                    
-                    # Save image locally
-                    image.save(local_path, 'JPEG', quality=95)
-                    
-                    return {
-                        'image': np.array(image),
-                        'size': (width, height),
-                        'valid': True,
-                        'local_path': local_path,
-                        'cached': False
-                    }
-                    
-                except Exception as e:
-                    logger.warning(f"Error downloading image from {url} (attempt {attempt + 1}): {e}")
-                    if attempt == max_retries - 1:
-                        return None
-            
-        except Exception as e:
-            logger.error(f"Error processing image {image_id}: {e}")
-            return None
+    def find_existing_image(self, url, image_id):
+        """Find existing image in the gleamer directory"""
+        # Extract filename from URL
+        filename = url.split('/')[-1]
         
+        # Try different possible locations
+        possible_paths = [
+            os.path.join(EXISTING_IMAGES_DIR, filename),
+            os.path.join(EXISTING_IMAGES_DIR, "images", filename),
+            os.path.join(EXISTING_IMAGES_DIR, "data", filename),
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                try:
+                    # Load and validate existing image
+                    image = Image.open(path).convert('RGB')
+                    
+                    if self.validate_image(image):
+                        return {
+                            'image': np.array(image),
+                            'size': image.size,
+                            'valid': True,
+                            'local_path': path,
+                            'cached': True
+                        }
+                    else:
+                        logger.warning(f"Invalid existing image: {path}")
+                        continue
+                except Exception as e:
+                    logger.warning(f"Failed to load existing image {path}: {e}")
+                    continue
+        
+        # If not found, return None
+        logger.warning(f"Image not found in existing directory: {filename}")
         return None
     
     def preprocess_batch(self, batch_data):
@@ -167,7 +140,7 @@ class DatasetPreprocessor:
                 # Parse image URLs
                 image_urls = eval(row['download_urls']) if isinstance(row['download_urls'], str) else row['download_urls']
                 
-                # Download and validate images
+                # Load existing images from gleamer directory
                 images = []
                 image_paths = []
                 valid_image_count = 0
@@ -175,7 +148,7 @@ class DatasetPreprocessor:
                 for i, url in enumerate(image_urls[:TRAINING_CONFIG['max_images_per_study']]):
                     # Create proper image ID using alignment system
                     image_id = self.alignment_system.create_image_id(row, i)
-                    image_data = self.download_and_validate_image(url, image_id)
+                    image_data = self.find_existing_image(url, image_id)
                     
                     if image_data and image_data['valid']:
                         images.append(image_data['image'])
