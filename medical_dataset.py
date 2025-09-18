@@ -250,14 +250,21 @@ class BinaryMedicalDataset(Dataset):
         if isinstance(image, np.ndarray):
             image = torch.from_numpy(image).float()
         
-        # Ensure image has 4 dimensions: [C, H, W] or [H, W, C]
+        # Debug: Print tensor shape to understand the issue
+        print(f"Image tensor shape after transforms: {image.shape}")
+        
+        # Ensure image has correct dimensions [C, H, W]
         if image.dim() == 2:  # [H, W]
             image = image.unsqueeze(0)  # Add channel dimension -> [1, H, W]
         elif image.dim() == 3:
-            if image.shape[0] == 3 or image.shape[0] == 1:  # [C, H, W]
-                pass  # Already correct format
-            else:  # [H, W, C]
-                image = image.permute(2, 0, 1)  # Convert to [C, H, W]
+            # Check if it's [H, W, C] format
+            if image.shape[-1] == 3 or image.shape[-1] == 1:  # Last dimension is channel
+                image = image.permute(2, 0, 1)  # Convert [H, W, C] to [C, H, W]
+            elif image.shape[0] in [1, 3]:  # First dimension is channel
+                pass  # Already correct format [C, H, W]
+            else:
+                # If we can't determine, assume it's grayscale and add channel dimension
+                image = image.unsqueeze(0)  # Add channel dimension
         
         return {
             'image': image,
