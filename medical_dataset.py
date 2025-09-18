@@ -241,9 +241,8 @@ class BinaryMedicalDataset(Dataset):
         
         # Apply transforms
         if self.transform:
-            # Convert to PIL Image and prepare data dict for MONAI transforms
-            image = Image.fromarray(image)
-            data_dict = {'image': image}
+            # Prepare data dict for MONAI transforms (MONAI expects numpy arrays)
+            data_dict = {'image': image}  # image is already numpy array
             data_dict = self.transform(data_dict)
             image = data_dict['image']
         
