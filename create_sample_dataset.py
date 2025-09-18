@@ -277,11 +277,11 @@ def analyze_sample_dataset(sample_dir):
         
         for img in images:
             img_path = os.path.join(folder_path, img)
-                # Check if image is blank (has BLANK_ prefix or is actually blank)
-                if img.startswith('BLANK_') or not is_valid_image(img_path):
-                    blank_images += 1
-                else:
-                    valid_images += 1
+            # Check if image is blank (has BLANK_ prefix or is actually blank)
+            if img.startswith('BLANK_') or not is_valid_image(img_path):
+                blank_images += 1
+            else:
+                valid_images += 1
     
     print(f"\n📊 SUMMARY:")
     print(f"   Total images: {total_images}")
