@@ -1,0 +1,60 @@
+SAMPLE 488 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.840.113619.2.418.4.8323328.1756443742.362048",
+  "1.2.840.113619.2.418.4.8323328.1756443653.179873.1",
+  "1.2.840.113619.2.418.4.8323328.1756443680.705591.1",
+  "1.2.250.1.439.5.78.20250829050741618.948008066",
+  "1.2.250.1.439.5.78.20250829050741618.2052304274",
+  "1.2.250.1.439.5.78.20250829050741616.1973474886"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+1892899.001SRMC
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.410.200010.1215350.527.9528.1963466
+------------------------------
+
+STUDY_DESCRIPTION:
+HAND,LIMITED (AP/LAT)
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "HAND",
+  "HAND_OTHER",
+  "HAND_FRONT"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.418.4.8323328.1756443653.179873.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.418.4.8323328.1756443680.705591.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250829050741618.948008066.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250829050741618.2052304274.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250829050741616.1973474886.jpg']
+------------------------------
+
+clinical_indication:
+Fall, pain, concern for metal foreign bodies LEFT
+
+
+------------------------------
+
+exam_technique:
+2 views DI HAND,LIMITED (AP/LAT)
+
+
+------------------------------
+
+findings:
+No evidence of fracture, joint or physeal malalignment. Nonfocal soft tissue prominence of the digits. A punctate density projects at the dorsal aspect of the 1st metacarpophalangeal joint.
+
+
+------------------------------
+
+GLEAMER_FINDING:
+DOUBT
+------------------------------
+

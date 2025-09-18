@@ -1,0 +1,65 @@
+SAMPLE 520 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.3.12.2.1107.5.3.35.64260.11.202508011822050435",
+  "1.3.12.2.1107.5.3.35.64260.11.202508011821260668",
+  "1.3.12.2.1107.5.3.35.64260.11.202508011820250753",
+  "1.2.250.1.439.5.78.20250802012519819.283313275"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+1927971.001
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.840.114051.114051.18056.2025080106104773.1394630424
+------------------------------
+
+STUDY_DESCRIPTION:
+XRAY LUMBAR SPINE LIMITED 3V
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "LSPINE"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.3.12.2.1107.5.3.35.64260.11.202508011822050435.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.3.12.2.1107.5.3.35.64260.11.202508011821260668.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.3.12.2.1107.5.3.35.64260.11.202508011820250753.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250802012519819.283313275.jpg']
+------------------------------
+
+clinical_indication:
+, back pain
+
+
+------------------------------
+
+exam_technique:
+3 radiographic views of the lumbar spine were obtained.
+
+
+------------------------------
+
+findings:
+5 non-rib-bearing lumbar-type vertebrae. Posterior spinal fusion of L4-S1 with intervertebral disc spacers. Normal lumbar lordosis. Multilevel moderate degenerative changes of the lumbar spine. No evidence of acute traumatic fractures or spondylolisthesis.
+
+Vascular calcification is noted. Small to moderate amount of fecal material within the colon.
+
+
+
+
+
+
+
+
+
+------------------------------
+
+GLEAMER_FINDING:
+NEGATIVE
+------------------------------
+

@@ -1,0 +1,62 @@
+SAMPLE 2286 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.250.1.439.5.78.20250819203312001.1031175691",
+  "1.2.840.113619.2.420.4.8323328.1755634941.307288.1",
+  "1.2.840.113619.2.420.4.8323328.1755634965.364460.1",
+  "1.2.840.113619.2.420.4.8323328.1755634999.531826.1"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+2.02508E+12
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.410.200010.1152031.2743.3322.499197078
+------------------------------
+
+STUDY_DESCRIPTION:
+XR SHOULDER 3 VIEW LEFT
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "SHOULDER"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250819203312001.1031175691.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.420.4.8323328.1755634941.307288.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.420.4.8323328.1755634965.364460.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.420.4.8323328.1755634999.531826.1.jpg']
+------------------------------
+
+clinical_indication:
+mvc pain
+
+
+------------------------------
+
+exam_technique:
+nan
+------------------------------
+
+findings:
+ 
+No acute displaced fracture, dislocation, bone destruction.  Acromioclavicular and glenohumeral joints are maintained. No radiopaque foreign bodies identified.
+
+
+ 
+
+
+
+
+
+
+------------------------------
+
+GLEAMER_FINDING:
+NEGATIVE
+------------------------------
+

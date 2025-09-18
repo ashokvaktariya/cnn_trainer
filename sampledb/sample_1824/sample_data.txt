@@ -1,0 +1,68 @@
+SAMPLE 1824 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.250.1.439.5.78.20250813191711357.2141530304",
+  "1.2.250.1.439.5.78.20250813191711361.493213582",
+  "1.2.250.1.439.5.78.20250813191711360.2036215610",
+  "1.2.250.1.439.5.78.20250813191711359.1248962408",
+  "1.2.250.1.439.5.78.20250813191711358.1783270395",
+  "1.2.840.113619.2.203.4.2147483647.1755107085.360974",
+  "1.2.840.113619.2.203.4.2147483647.1755107123.573271",
+  "1.2.840.113619.2.203.4.2147483647.1755107271.954939",
+  "1.2.840.113619.2.203.4.2147483647.1755107329.335938"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+2.02508E+12
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.410.200010.1130909.2636.4659.490224805
+------------------------------
+
+STUDY_DESCRIPTION:
+XR FEET 2 VIEWS BILATERAL
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "FOOT",
+  "ANKLE"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250813191711357.2141530304.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250813191711361.493213582.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250813191711360.2036215610.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250813191711359.1248962408.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250813191711358.1783270395.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.203.4.2147483647.1755107085.360974.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.203.4.2147483647.1755107123.573271.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.203.4.2147483647.1755107271.954939.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.203.4.2147483647.1755107329.335938.jpg']
+------------------------------
+
+clinical_indication:
+atraumatic bruising
+
+
+
+
+------------------------------
+
+exam_technique:
+XR FEET 2 VIEWS BILATERAL performed. 
+
+
+------------------------------
+
+findings:
+There are no appreciable fracture lines or subluxations.  There is gross anatomic alignment.  No appreciable joint effusion.
+
+Chronic appearing healed fracture deformity of the left 5th metatarsal bone with thickening and presumed callus. There is osteopenia.
+
+
+
+
+------------------------------
+
+GLEAMER_FINDING:
+POSITIVE
+------------------------------
+

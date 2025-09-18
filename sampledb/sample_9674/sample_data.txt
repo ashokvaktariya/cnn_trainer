@@ -1,0 +1,63 @@
+SAMPLE 9674 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.250.1.439.5.78.20250829223959601.1162613353",
+  "1.2.840.113619.2.305.4.2147483647.1756497862.881813",
+  "1.2.840.113619.2.305.4.2147483647.1756497934.815858"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+2223720.003DVG
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.410.200010.1144105.6176.6080.19813833
+------------------------------
+
+STUDY_DESCRIPTION:
+L FOREARM XRAY
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "FOREARM"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250829223959601.1162613353.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1756497862.881813.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1756497934.815858.jpg']
+------------------------------
+
+clinical_indication:
+MVA
+
+
+------------------------------
+
+exam_technique:
+AP and lateral views of the left forearm were performed.
+
+
+
+------------------------------
+
+findings:
+No acute fracture of the left radius or ulna. 
+
+
+
+
+
+
+
+
+
+------------------------------
+
+GLEAMER_FINDING:
+NEGATIVE
+------------------------------
+

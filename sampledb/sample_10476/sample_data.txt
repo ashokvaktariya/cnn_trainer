@@ -1,0 +1,66 @@
+SAMPLE 10476 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.250.1.439.5.78.20250809191049943.865832395",
+  "1.2.410.200010.8178.202508091344071248368.20250809.90000.0",
+  "1.2.840.113564.10130110235.2025080913413854657.1003000225002",
+  "1.2.840.113564.10130110235.2025080913413946859.1003000225002",
+  "1.2.840.113564.10130110235.2025080913413634355.1003000225002",
+  "1.2.840.113564.10130110235.2025080913414485963.1003000225002",
+  "1.2.840.113564.10130110235.2025080913452503167.1003000225002",
+  "1.2.840.113564.10130110235.2025080913414032861.1003000225002",
+  "1.2.840.113564.10130110235.2025080913491593771.1003000225002"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+RAD2508090019DB
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.410.200010.1124842.4450.7210.44423292
+------------------------------
+
+STUDY_DESCRIPTION:
+XR LUMBAR SPINE COMPLETE 5VWS
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "L SPINE"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250809191049943.865832395.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.410.200010.8178.202508091344071248368.20250809.90000.0.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913413854657.1003000225002.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913413946859.1003000225002.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913413634355.1003000225002.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913414485963.1003000225002.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913452503167.1003000225002.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913414032861.1003000225002.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113564.10130110235.2025080913491593771.1003000225002.jpg']
+------------------------------
+
+clinical_indication:
+trauma
+
+
+
+
+
+
+
+------------------------------
+
+exam_technique:
+7 radiographs including frontal and lateral views of the lumbar spine were obtained. 
+
+
+------------------------------
+
+findings:
+There are no fractures or subluxations.     Vertebral body heights and disc spaces are maintained. The paravertebral soft tissues are unremarkable.
+
+
+------------------------------
+
+GLEAMER_FINDING:
+NEGATIVE
+------------------------------
+

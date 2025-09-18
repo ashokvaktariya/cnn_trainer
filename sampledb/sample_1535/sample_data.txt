@@ -1,0 +1,67 @@
+SAMPLE 1535 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.250.1.439.5.78.20250810000926941.422857224",
+  "1.2.250.1.439.5.78.20250810000926940.1500138588",
+  "1.2.250.1.439.5.78.20250810000926940.1311051492",
+  "1.2.250.1.439.5.78.20250810000926940.712435829",
+  "1.2.840.113619.2.420.4.8323328.1754781826.986463.1",
+  "1.2.840.113619.2.420.4.8323328.1754781759.280498.1",
+  "1.2.840.113619.2.420.4.8323328.1754781848.940615.1"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+2.02508E+12
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.410.200010.1175117.1120.411.429710096
+------------------------------
+
+STUDY_DESCRIPTION:
+XR LUMBAR SPINE 2-3 VIEWS
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "S_SPINE",
+  "LSPINE",
+  "L_SPINE"
+]
+------------------------------
+
+download_urls:
+['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250810000926941.422857224.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250810000926940.1500138588.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250810000926940.1311051492.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250810000926940.712435829.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.420.4.8323328.1754781826.986463.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.420.4.8323328.1754781759.280498.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.420.4.8323328.1754781848.940615.1.jpg']
+------------------------------
+
+clinical_indication:
+midline tenderness
+
+
+------------------------------
+
+exam_technique:
+3 views of the lumbar spine were obtained.
+
+
+------------------------------
+
+findings:
+The lumbar vertebral alignment is normal. 
+
+Chronic compression fracture involving the T12 vertebral body.  Aortic atherosclerosis.
+
+No acute fracture, vertebral compression deformity or aggressive osseous lesions. 
+
+The paravertebral soft tissues are grossly unremarkable. 
+
+
+------------------------------
+
+GLEAMER_FINDING:
+POSITIVE
+------------------------------
+

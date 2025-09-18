@@ -1,0 +1,56 @@
+SAMPLE 11087 - COMPLETE DATA
+==================================================
+
+SOP_INSTANCE_UID_ARRAY:
+[
+  "1.2.250.1.439.5.78.20250808172444467.1499019458",
+  "1.2.840.113619.2.261.4.2147483647.1754673456.740120.1",
+  "1.2.840.113619.2.261.4.2147483647.1754673484.404105.1",
+  "1.2.840.113619.2.261.4.2147483647.1754673531.800789.1"
+]
+------------------------------
+
+ACCESSION_NUMBER:
+SBCH-495964-1
+------------------------------
+
+STUDY_INSTANCE_UID:
+1.2.840.113845.11.1000000001951524609.20250807112000.1006318
+------------------------------
+
+STUDY_DESCRIPTION:
+IH-X-RAY, KNEE RT 3 VIEWS
+------------------------------
+
+BODY_PART_ARRAY:
+[
+  "KNEE"
+]
+------------------------------
+
+download_urls:
+[]
+------------------------------
+
+clinical_indication:
+Chronic right knee pain. History of OA
+
+TECHNICAL DATA: Frontal , oblique and lateral views were obtained of the   right knee.
+
+
+------------------------------
+
+exam_technique:
+nan
+------------------------------
+
+findings:
+No fracture is identified. Medial, lateral and patellofemoral compartment joint spaces are mildly degenerative.  Alignment is anatomic. Soft tissues are within normal limits. No joint effusion is demonstrated.  
+
+
+------------------------------
+
+GLEAMER_FINDING:
+NEGATIVE
+------------------------------
+
