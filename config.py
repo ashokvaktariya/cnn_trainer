@@ -15,8 +15,8 @@ from pathlib import Path
 SERVER_DATA_ROOT = "/sharedata01/CNN_data"
 GLEAMER_DATA_ROOT = "/sharedata01/CNN_data/gleamer/gleamer"
 
-# Dataset paths - use existing gleamer data
-CSV_FILE = os.path.join(GLEAMER_DATA_ROOT, "dicom_image_url_file.csv")
+# Dataset paths - use preprocessed data
+CSV_FILE = os.path.join(OUTPUT_ROOT, "preprocessed", "binary_medical_dataset.csv")
 DATA_ROOT = SERVER_DATA_ROOT  # For our processed data
 EXISTING_IMAGES_DIR = GLEAMER_DATA_ROOT  # Where images are already stored
 

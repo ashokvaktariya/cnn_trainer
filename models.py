@@ -54,16 +54,14 @@ class FocalLoss(nn.Module):
 class BinaryEfficientNet(nn.Module):
     """Binary Classification Model using EfficientNet-B7 for fracture detection"""
     
-    def __init__(self, num_classes=2, dropout_rate=0.3, pretrained=True):
+    def __init__(self, num_classes=2, dropout_rate=0.3, pretrained=True, **kwargs):
         super().__init__()
         
         # Use EfficientNet-B7 backbone
-        self.backbone = EfficientNet(
-            model_name="efficientnet-b7",
-            spatial_dims=2,
-            in_channels=3,  # RGB images
-            pretrained=pretrained,
-            dropout_prob=dropout_rate
+        self.backbone = EfficientNet.from_pretrained(
+            "efficientnet-b7",
+            num_classes=num_classes,
+            dropout_rate=dropout_rate
         )
         
         # Get feature dimension from EfficientNet-B7
