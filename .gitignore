@@ -10,7 +10,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/  # Removed to include MONAI library
 lib64/
 parts/
 sdist/
@@ -20,6 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# MONAI Library - Include lib directory
+# lib/ directory is now included in the repository
 
 # PyInstaller
 *.manifest
@@ -137,3 +140,33 @@ Thumbs.db
 
 # Server specific
 /sharedata01/
+
+# MONAI specific exclusions - removed to include MONAI library
+# monai/
+# monai/**
+# *.monai
+# monai.egg-info/
+# monai-*/
+
+# Additional MONAI exclusions - removed to include MONAI library
+# setup.py
+# setup.cfg
+# pyproject.toml
+# MANIFEST.in
+# versioneer.py
+# requirements-dev.txt
+# requirements-min.txt
+# runtests.sh
+# environment-dev.yml
+
+# Exclude any remaining MONAI files - removed to include MONAI library
+# *.monai
+# monai.egg-info/
+# monai-*/
+# monai_*/
+
+# Third-party library exclusions
+third_party/
+external/
+vendor/
+dependencies/
