@@ -88,6 +88,10 @@ class BinaryMedicalDataset(Dataset):
         # Use config defaults if not provided
         csv_file = csv_file or CSV_FILE
         
+        # Setup logging first
+        logging.basicConfig(level=getattr(logging, LOGGING_CONFIG['log_level']))
+        self.logger = logging.getLogger(__name__)
+        
         self.data = pd.read_csv(csv_file)
         self.transform = transform
         self.mode = mode
@@ -98,10 +102,6 @@ class BinaryMedicalDataset(Dataset):
         
         # Split data for train/val/test
         self._split_data()
-        
-        # Setup logging
-        logging.basicConfig(level=getattr(logging, LOGGING_CONFIG['log_level']))
-        self.logger = logging.getLogger(__name__)
         
         self.logger.info(f"📊 {mode} dataset initialized with {len(self.data)} samples")
     
