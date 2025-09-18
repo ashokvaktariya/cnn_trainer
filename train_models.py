@@ -2,385 +2,439 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from lib.monai.engines import SupervisedTrainer
-from lib.monai.losses import DiceLoss, FocalLoss
-from lib.monai.metrics import ROCAUCMetric, ConfusionMatrixMetric
-from lib.monai.handlers import (
-    CheckpointSaver, StatsHandler, 
-    ValidationHandler, LrScheduleHandler,
-    EarlyStopHandler
-)
-from lib.monai.networks.utils import one_hot
-from sklearn.metrics import classification_report, confusion_matrix
+from torch.cuda.amp import GradScaler, autocast
 import numpy as np
 import os
 import time
 from tqdm import tqdm
 import json
+import logging
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, accuracy_score
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-from medical_dataset import create_data_loaders
-from models import (
-    ImageOnlyDenseNet, ImageOnlyEfficientNet,
-    MultimodalDenseNet, MultimodalEfficientNet,
-    MedicalEnsemble
+from medical_dataset import create_data_loaders, get_dataset_stats
+from models import create_model, create_loss_function, get_model_summary
+from config import (
+    TRAINING_CONFIG, GPU_CONFIG, CHECKPOINTS_DIR, RESULTS_DIR, LOGS_DIR,
+    MODEL_CONFIGS, BINARY_CONFIG
 )
 
-class MedicalTrainer:
-    """Custom trainer for medical image classification"""
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class BinaryMedicalTrainer:
+    """Binary Classification Trainer for Medical Image Fracture Detection"""
     
-    def __init__(self, model, device, model_name, save_dir="./checkpoints"):
+    def __init__(self, model, device, model_name, save_dir=None):
         self.model = model.to(device)
         self.device = device
         self.model_name = model_name
-        self.save_dir = save_dir
-        self.best_auc = 0.0
+        self.save_dir = save_dir or CHECKPOINTS_DIR
+        self.best_accuracy = 0.0
         self.train_losses = []
         self.val_losses = []
+        self.val_accuracies = []
         self.val_aucs = []
         
-        # Create save directory
-        os.makedirs(save_dir, exist_ok=True)
+        # Mixed precision training
+        self.scaler = GradScaler() if GPU_CONFIG['mixed_precision'] else None
         
+        # Create save directory
+        os.makedirs(self.save_dir, exist_ok=True)
+        
+        logger.info(f"🚀 Binary Medical Trainer initialized for {model_name}")
+        logger.info(f"📱 Device: {device}")
+        logger.info(f"💾 Save directory: {self.save_dir}")
+    
     def train_epoch(self, train_loader, optimizer, criterion, epoch):
         """Train for one epoch"""
         self.model.train()
         total_loss = 0.0
-        num_batches = len(train_loader)
+        correct = 0
+        total = 0
         
         progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}")
         
         for batch_idx, batch in enumerate(progress_bar):
-            optimizer.zero_grad()
-            
-            # Move data to device
-            images = batch['images'].to(self.device)
+            images = batch['image'].to(self.device)
             labels = batch['label'].to(self.device)
             
-            # Forward pass
-            if self.model_name.startswith('multimodal'):
-                # Multimodal models need text input
-                text_input_ids = batch['text_input_ids'].to(self.device)
-                text_attention_mask = batch['text_attention_mask'].to(self.device)
-                outputs = self.model(images, text_input_ids, text_attention_mask)
+            optimizer.zero_grad()
+            
+            if self.scaler:
+                # Mixed precision training
+                with autocast():
+                    outputs = self.model(images)
+                    loss = criterion(outputs, labels)
+                
+                self.scaler.scale(loss).backward()
+                
+                # Gradient clipping
+                if TRAINING_CONFIG.get('gradient_clipping'):
+                    self.scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), TRAINING_CONFIG['gradient_clipping'])
+                
+                self.scaler.step(optimizer)
+                self.scaler.update()
             else:
-                # Image-only models
+                # Standard training
                 outputs = self.model(images)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                
+                # Gradient clipping
+                if TRAINING_CONFIG.get('gradient_clipping'):
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), TRAINING_CONFIG['gradient_clipping'])
+                
+                optimizer.step()
             
-            # Calculate loss
-            loss = criterion(outputs, labels)
-            
-            # Backward pass
-            loss.backward()
-            optimizer.step()
-            
+            # Statistics
             total_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
             
             # Update progress bar
+            accuracy = 100.0 * correct / total
             progress_bar.set_postfix({
                 'Loss': f'{loss.item():.4f}',
-                'Avg Loss': f'{total_loss/(batch_idx+1):.4f}'
+                'Acc': f'{accuracy:.2f}%'
             })
         
-        avg_loss = total_loss / num_batches
+        avg_loss = total_loss / len(train_loader)
+        accuracy = 100.0 * correct / total
+        
         self.train_losses.append(avg_loss)
         
-        return avg_loss
+        logger.info(f"📊 Epoch {epoch+1} - Train Loss: {avg_loss:.4f}, Train Acc: {accuracy:.2f}%")
+        
+        return avg_loss, accuracy
     
-    def validate(self, val_loader, criterion):
-        """Validate the model"""
+    def validate_epoch(self, val_loader, criterion, epoch):
+        """Validate for one epoch"""
         self.model.eval()
         total_loss = 0.0
-        all_preds = []
+        correct = 0
+        total = 0
+        all_predictions = []
         all_labels = []
-        all_probs = []
+        all_probabilities = []
         
         with torch.no_grad():
-            for batch in tqdm(val_loader, desc="Validating"):
-                # Move data to device
-                images = batch['images'].to(self.device)
+            for batch in tqdm(val_loader, desc=f"Validation {epoch+1}"):
+                images = batch['image'].to(self.device)
                 labels = batch['label'].to(self.device)
                 
-                # Forward pass
-                if self.model_name.startswith('multimodal'):
-                    text_input_ids = batch['text_input_ids'].to(self.device)
-                    text_attention_mask = batch['text_attention_mask'].to(self.device)
-                    outputs = self.model(images, text_input_ids, text_attention_mask)
+                if self.scaler:
+                    with autocast():
+                        outputs = self.model(images)
+                        loss = criterion(outputs, labels)
                 else:
                     outputs = self.model(images)
+                    loss = criterion(outputs, labels)
                 
-                # Calculate loss
-                loss = criterion(outputs, labels)
+                # Statistics
                 total_loss += loss.item()
+                probabilities = torch.softmax(outputs, dim=1)
+                _, predicted = torch.max(outputs.data, 1)
                 
-                # Get predictions
-                probs = torch.softmax(outputs, dim=1)
-                preds = torch.argmax(probs, dim=1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
                 
-                all_preds.extend(preds.cpu().numpy())
+                # Store for metrics
+                all_predictions.extend(predicted.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
-                all_probs.extend(probs[:, 1].cpu().numpy())  # Probability of positive class
+                all_probabilities.extend(probabilities[:, 1].cpu().numpy())  # POSITIVE class probability
         
         # Calculate metrics
         avg_loss = total_loss / len(val_loader)
-        accuracy = np.mean(np.array(all_preds) == np.array(all_labels))
+        accuracy = 100.0 * correct / total
         
         # Calculate AUC
-        try:
-            from sklearn.metrics import roc_auc_score
-            auc = roc_auc_score(all_labels, all_probs)
-        except:
-            auc = 0.0
+        auc = roc_auc_score(all_labels, all_probabilities)
+        
+        # Calculate precision, recall, F1
+        precision = 0.0
+        recall = 0.0
+        f1 = 0.0
+        
+        if len(set(all_labels)) > 1:  # Check if we have both classes
+            report = classification_report(all_labels, all_predictions, output_dict=True)
+            precision = report['1']['precision']  # POSITIVE class
+            recall = report['1']['recall']        # POSITIVE class
+            f1 = report['1']['f1-score']         # POSITIVE class
         
         self.val_losses.append(avg_loss)
+        self.val_accuracies.append(accuracy)
         self.val_aucs.append(auc)
         
-        return avg_loss, accuracy, auc
+        logger.info(f"📊 Epoch {epoch+1} - Val Loss: {avg_loss:.4f}, Val Acc: {accuracy:.2f}%, Val AUC: {auc:.4f}")
+        logger.info(f"📊 Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
+        
+        return avg_loss, accuracy, auc, precision, recall, f1
     
-    def train(self, train_loader, val_loader, num_epochs=50, lr=1e-4, weight_decay=1e-5):
-        """Complete training pipeline"""
-        print(f"\n🚀 Training {self.model_name}")
-        print(f"📊 Training samples: {len(train_loader.dataset)}")
-        print(f"📊 Validation samples: {len(val_loader.dataset)}")
-        
-        # Setup
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='max', factor=0.5, patience=5, verbose=True
-        )
-        
-        # Training loop
-        for epoch in range(num_epochs):
-            start_time = time.time()
-            
-            # Train
-            train_loss = self.train_epoch(train_loader, optimizer, criterion, epoch)
-            
-            # Validate
-            val_loss, val_accuracy, val_auc = self.validate(val_loader, criterion)
-            
-            # Update scheduler
-            scheduler.step(val_auc)
-            
-            # Save best model
-            if val_auc > self.best_auc:
-                self.best_auc = val_auc
-                self.save_checkpoint(epoch, val_auc, is_best=True)
-            
-            # Print progress
-            epoch_time = time.time() - start_time
-            print(f"Epoch {epoch+1}/{num_epochs}")
-            print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
-            print(f"Val Accuracy: {val_accuracy:.4f}, Val AUC: {val_auc:.4f}")
-            print(f"Best AUC: {self.best_auc:.4f}, Time: {epoch_time:.2f}s")
-            print("-" * 50)
-            
-            # Early stopping
-            if len(self.val_aucs) > 10:
-                if max(self.val_aucs[-10:]) <= max(self.val_aucs[:-10]):
-                    print("Early stopping triggered!")
-                    break
-        
-        print(f"✅ Training completed! Best AUC: {self.best_auc:.4f}")
-        
-        # Save final model and metrics
-        self.save_checkpoint(epoch, val_auc, is_best=False)
-        self.save_metrics()
-    
-    def save_checkpoint(self, epoch, auc, is_best=False):
+    def save_checkpoint(self, epoch, optimizer, scheduler, is_best=False):
         """Save model checkpoint"""
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
-            'best_auc': self.best_auc,
+            'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict() if scheduler else None,
+            'best_accuracy': self.best_accuracy,
             'train_losses': self.train_losses,
             'val_losses': self.val_losses,
-            'val_aucs': self.val_aucs
+            'val_accuracies': self.val_accuracies,
+            'val_aucs': self.val_aucs,
+            'config': {
+                'model_name': self.model_name,
+                'training_config': TRAINING_CONFIG,
+                'binary_config': BINARY_CONFIG
+            }
         }
         
         if is_best:
-            torch.save(checkpoint, f"{self.save_dir}/{self.model_name}_best.pth")
+            checkpoint_path = os.path.join(self.save_dir, f"{self.model_name}_best.pth")
+            torch.save(checkpoint, checkpoint_path)
+            logger.info(f"💾 Best model saved: {checkpoint_path}")
         else:
-            torch.save(checkpoint, f"{self.save_dir}/{self.model_name}_final.pth")
+            checkpoint_path = os.path.join(self.save_dir, f"{self.model_name}_epoch_{epoch+1}.pth")
+            torch.save(checkpoint, checkpoint_path)
+        
+        # Always save latest
+        latest_path = os.path.join(self.save_dir, f"{self.model_name}_latest.pth")
+        torch.save(checkpoint, latest_path)
     
-    def save_metrics(self):
-        """Save training metrics"""
-        metrics = {
-            'train_losses': self.train_losses,
-            'val_losses': self.val_losses,
-            'val_aucs': self.val_aucs,
-            'best_auc': self.best_auc
+    def load_checkpoint(self, checkpoint_path):
+        """Load model checkpoint"""
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.best_accuracy = checkpoint['best_accuracy']
+        self.train_losses = checkpoint['train_losses']
+        self.val_losses = checkpoint['val_losses']
+        self.val_accuracies = checkpoint['val_accuracies']
+        self.val_aucs = checkpoint['val_aucs']
+        
+        logger.info(f"📂 Checkpoint loaded: {checkpoint_path}")
+        logger.info(f"📊 Best accuracy: {self.best_accuracy:.2f}%")
+        
+        return checkpoint
+    
+    def plot_training_curves(self, save_path=None):
+        """Plot training curves"""
+        if save_path is None:
+            save_path = os.path.join(RESULTS_DIR, f"{self.model_name}_training_curves.png")
+        
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        
+        # Loss curves
+        axes[0, 0].plot(self.train_losses, label='Train Loss')
+        axes[0, 0].plot(self.val_losses, label='Val Loss')
+        axes[0, 0].set_title('Training and Validation Loss')
+        axes[0, 0].set_xlabel('Epoch')
+        axes[0, 0].set_ylabel('Loss')
+        axes[0, 0].legend()
+        axes[0, 0].grid(True)
+        
+        # Accuracy curves
+        axes[0, 1].plot(self.val_accuracies, label='Val Accuracy', color='green')
+        axes[0, 1].set_title('Validation Accuracy')
+        axes[0, 1].set_xlabel('Epoch')
+        axes[0, 1].set_ylabel('Accuracy (%)')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True)
+        
+        # AUC curves
+        axes[1, 0].plot(self.val_aucs, label='Val AUC', color='orange')
+        axes[1, 0].set_title('Validation AUC')
+        axes[1, 0].set_xlabel('Epoch')
+        axes[1, 0].set_ylabel('AUC')
+        axes[1, 0].legend()
+        axes[1, 0].grid(True)
+        
+        # Combined metrics
+        axes[1, 1].plot(self.val_accuracies, label='Accuracy', color='green')
+        axes[1, 1].plot([x * 100 for x in self.val_aucs], label='AUC × 100', color='orange')
+        axes[1, 1].set_title('Validation Metrics Comparison')
+        axes[1, 1].set_xlabel('Epoch')
+        axes[1, 1].set_ylabel('Score')
+        axes[1, 1].legend()
+        axes[1, 1].grid(True)
+        
+        plt.tight_layout()
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"📊 Training curves saved: {save_path}")
+    
+    def train(self, train_loader, val_loader, num_epochs=None, learning_rate=None):
+        """Complete training pipeline"""
+        num_epochs = num_epochs or TRAINING_CONFIG['num_epochs']
+        learning_rate = learning_rate or TRAINING_CONFIG['learning_rate']
+        
+        logger.info(f"🚀 Starting training for {num_epochs} epochs")
+        logger.info(f"📊 Training samples: {len(train_loader.dataset)}")
+        logger.info(f"📊 Validation samples: {len(val_loader.dataset)}")
+        
+        # Setup optimizer
+        optimizer = optim.AdamW(
+            self.model.parameters(),
+            lr=learning_rate,
+            weight_decay=TRAINING_CONFIG['weight_decay']
+        )
+        
+        # Setup scheduler
+        if TRAINING_CONFIG['scheduler'] == 'cosine':
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=num_epochs
+            )
+        elif TRAINING_CONFIG['scheduler'] == 'step':
+            scheduler = optim.lr_scheduler.StepLR(
+                optimizer, step_size=num_epochs//3, gamma=0.1
+            )
+        else:
+            scheduler = None
+        
+        # Setup loss function
+        if MODEL_CONFIGS['binary_classifier']['use_focal_loss']:
+            criterion = create_loss_function(
+                use_focal_loss=True,
+                alpha=MODEL_CONFIGS['binary_classifier']['focal_alpha'],
+                gamma=MODEL_CONFIGS['binary_classifier']['focal_gamma']
+            )
+        else:
+            criterion = nn.CrossEntropyLoss()
+        
+        # Early stopping
+        patience = TRAINING_CONFIG['patience']
+        min_delta = TRAINING_CONFIG['min_delta']
+        best_epoch = 0
+        patience_counter = 0
+        
+        # Training loop
+        start_time = time.time()
+        
+        for epoch in range(num_epochs):
+            epoch_start = time.time()
+            
+            # Train
+            train_loss, train_acc = self.train_epoch(train_loader, optimizer, criterion, epoch)
+            
+            # Validate
+            val_loss, val_acc, val_auc, precision, recall, f1 = self.validate_epoch(val_loader, criterion, epoch)
+            
+            # Update scheduler
+            if scheduler:
+                scheduler.step()
+            
+            # Check for best model
+            is_best = val_acc > self.best_accuracy + min_delta
+            if is_best:
+                self.best_accuracy = val_acc
+                best_epoch = epoch
+                patience_counter = 0
+                logger.info(f"🎯 New best accuracy: {val_acc:.2f}% at epoch {epoch+1}")
+            else:
+                patience_counter += 1
+            
+            # Save checkpoint
+            if is_best or (epoch + 1) % TRAINING_CONFIG['save_every_n_epochs'] == 0:
+                self.save_checkpoint(epoch, optimizer, scheduler, is_best=is_best)
+            
+            # Log epoch time
+            epoch_time = time.time() - epoch_start
+            logger.info(f"⏱️ Epoch {epoch+1} completed in {epoch_time:.1f}s")
+            
+            # Early stopping
+            if patience_counter >= patience:
+                logger.info(f"🛑 Early stopping at epoch {epoch+1} (patience: {patience})")
+                break
+        
+        # Final training summary
+        total_time = time.time() - start_time
+        logger.info(f"🎉 Training completed in {total_time/3600:.1f} hours")
+        logger.info(f"🏆 Best accuracy: {self.best_accuracy:.2f}% at epoch {best_epoch+1}")
+        
+        # Plot training curves
+        self.plot_training_curves()
+        
+        # Save final results
+        results = {
+            'best_accuracy': self.best_accuracy,
+            'best_epoch': best_epoch,
+            'total_epochs': epoch + 1,
+            'training_time_hours': total_time / 3600,
+            'final_train_loss': train_loss,
+            'final_val_loss': val_loss,
+            'final_val_accuracy': val_acc,
+            'final_val_auc': val_auc,
+            'final_precision': precision,
+            'final_recall': recall,
+            'final_f1': f1
         }
         
-        with open(f"{self.save_dir}/{self.model_name}_metrics.json", 'w') as f:
-            json.dump(metrics, f, indent=2)
+        results_path = os.path.join(RESULTS_DIR, f"{self.model_name}_training_results.json")
+        os.makedirs(os.path.dirname(results_path), exist_ok=True)
+        
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=2)
+        
+        logger.info(f"📊 Training results saved: {results_path}")
+        
+        return results
 
-def train_all_models(csv_file, device, save_dir="./checkpoints"):
-    """Train all 5 models"""
+def train_binary_classifier():
+    """Main training function for binary classification"""
+    logger.info("🚀 Starting Binary Medical Image Classification Training")
     
-    print("🏥 Medical Image Classification Training Pipeline")
-    print("=" * 60)
+    # Setup device
+    device = torch.device(GPU_CONFIG['device'])
+    logger.info(f"📱 Using device: {device}")
+    
+    # Create model
+    model_config = MODEL_CONFIGS['binary_classifier']
+    model = create_model(
+        model_type=model_config['model_type'],
+        num_classes=model_config['num_classes'],
+        dropout_rate=model_config['dropout_rate'],
+        pretrained=model_config['pretrained']
+    )
+    
+    # Print model summary
+    get_model_summary(model)
     
     # Create data loaders
-    print("📊 Loading data...")
-    train_loader, val_loader = create_data_loaders(csv_file, batch_size=16, num_workers=4)
-    
-    models_config = {
-        'image_densenet': {
-            'model': ImageOnlyDenseNet(),
-            'epochs': 50,
-            'lr': 1e-4
-        },
-        'image_efficientnet': {
-            'model': ImageOnlyEfficientNet(),
-            'epochs': 50,
-            'lr': 1e-4
-        },
-        'multimodal_densenet': {
-            'model': MultimodalDenseNet(),
-            'epochs': 40,
-            'lr': 5e-5  # Lower LR for multimodal
-        },
-        'multimodal_efficientnet': {
-            'model': MultimodalEfficientNet(),
-            'epochs': 40,
-            'lr': 5e-5
-        }
-    }
-    
-    trained_models = {}
-    
-    # Train individual models
-    for model_name, config in models_config.items():
-        print(f"\n🎯 Training {model_name}")
-        
-        trainer = MedicalTrainer(
-            model=config['model'],
-            device=device,
-            model_name=model_name,
-            save_dir=save_dir
-        )
-        
-        trainer.train(
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=config['epochs'],
-            lr=config['lr']
-        )
-        
-        trained_models[model_name] = trainer
-    
-    # Train ensemble (optional - can be done separately)
-    print(f"\n🎯 Training Ensemble Model")
-    ensemble_model = MedicalEnsemble(
-        model_paths={
-            'image_densenet': f"{save_dir}/image_densenet_best.pth",
-            'image_efficientnet': f"{save_dir}/image_efficientnet_best.pth",
-            'multimodal_densenet': f"{save_dir}/multimodal_densenet_best.pth",
-            'multimodal_efficientnet': f"{save_dir}/multimodal_efficientnet_best.pth"
-        },
-        device=device
+    train_loader, val_loader, test_loader = create_data_loaders(
+        batch_size=TRAINING_CONFIG['batch_size'],
+        num_workers=TRAINING_CONFIG['num_workers'],
+        balance_classes=TRAINING_CONFIG['balance_classes']
     )
     
-    # Fine-tune ensemble weights
-    ensemble_trainer = MedicalTrainer(
-        model=ensemble_model,
-        device=device,
-        model_name='ensemble',
-        save_dir=save_dir
-    )
+    # Print dataset statistics
+    stats = get_dataset_stats()
+    logger.info(f"📊 Dataset Statistics:")
+    logger.info(f"   Total samples: {stats['total_samples']}")
+    logger.info(f"   Positive: {stats['positive_samples']} ({stats['positive_ratio']:.1%})")
+    logger.info(f"   Negative: {stats['negative_samples']} ({stats['negative_ratio']:.1%})")
     
-    # Create ensemble data loader (smaller batch size)
-    train_loader_ensemble, val_loader_ensemble = create_data_loaders(
-        csv_file, batch_size=8, num_workers=2
-    )
+    # Create trainer
+    trainer = BinaryMedicalTrainer(model, device, "binary_classifier")
     
-    ensemble_trainer.train(
-        train_loader=train_loader_ensemble,
-        val_loader=val_loader_ensemble,
-        num_epochs=20,
-        lr=1e-5
-    )
+    # Train model
+    results = trainer.train(train_loader, val_loader)
     
-    print("\n🎉 All models trained successfully!")
+    # Check if target accuracy reached
+    target_accuracy = BINARY_CONFIG['target_accuracy'] * 100
+    if results['best_accuracy'] >= target_accuracy:
+        logger.info(f"🎯 Target accuracy {target_accuracy:.1f}% reached! ✅")
+    else:
+        logger.info(f"⚠️ Target accuracy {target_accuracy:.1f}% not reached. Best: {results['best_accuracy']:.2f}%")
     
-    return trained_models, ensemble_trainer
-
-def evaluate_models(test_csv_file, model_paths, device):
-    """Evaluate all trained models"""
-    
-    print("📊 Evaluating Models")
-    print("=" * 40)
-    
-    # Load test data
-    _, test_loader = create_data_loaders(test_csv_file, batch_size=16, num_workers=4)
-    
-    # Load ensemble model
-    ensemble = MedicalEnsemble(model_paths, device)
-    ensemble.eval()
-    
-    all_preds = []
-    all_labels = []
-    all_probs = []
-    
-    with torch.no_grad():
-        for batch in tqdm(test_loader, desc="Evaluating"):
-            images = batch['images'].to(device)
-            labels = batch['label'].to(device)
-            text_input_ids = batch['text_input_ids'].to(device)
-            text_attention_mask = batch['text_attention_mask'].to(device)
-            
-            # Get ensemble prediction
-            outputs, probs, weights = ensemble(images, text_input_ids, text_attention_mask)
-            
-            preds = torch.argmax(outputs, dim=1)
-            
-            all_preds.extend(preds.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
-            all_probs.extend(outputs[:, 1].cpu().numpy())
-    
-    # Calculate metrics
-    from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
-    
-    accuracy = np.mean(np.array(all_preds) == np.array(all_labels))
-    auc = roc_auc_score(all_labels, all_probs)
-    
-    print(f"📈 Final Results:")
-    print(f"Accuracy: {accuracy:.4f}")
-    print(f"AUC: {auc:.4f}")
-    print(f"Classification Report:")
-    print(classification_report(all_labels, all_preds, target_names=['NEGATIVE', 'POSITIVE']))
-    
-    return {
-        'accuracy': accuracy,
-        'auc': auc,
-        'predictions': all_preds,
-        'labels': all_labels,
-        'probabilities': all_probs
-    }
+    return trainer, results
 
 if __name__ == "__main__":
-    # Setup
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"🔧 Using device: {device}")
-    
-    # Train all models
-    trained_models, ensemble_trainer = train_all_models(
-        csv_file="dicom_image_url_file.csv",
-        device=device,
-        save_dir="./checkpoints"
-    )
-    
-    # Evaluate ensemble
-    model_paths = {
-        'image_densenet': "./checkpoints/image_densenet_best.pth",
-        'image_efficientnet': "./checkpoints/image_efficientnet_best.pth",
-        'multimodal_densenet': "./checkpoints/multimodal_densenet_best.pth",
-        'multimodal_efficientnet': "./checkpoints/multimodal_efficientnet_best.pth"
-    }
-    
-    results = evaluate_models(
-        test_csv_file="dicom_image_url_file.csv",
-        model_paths=model_paths,
-        device=device
-    )
+    trainer, results = train_binary_classifier()
