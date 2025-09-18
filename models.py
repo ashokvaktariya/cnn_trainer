@@ -4,16 +4,13 @@ import torch.nn.functional as F
 try:
     from efficientnet_pytorch import EfficientNet
 except ImportError:
-    try:
-        from monai.networks.nets import EfficientNet
-    except ImportError:
-        # Create a minimal EfficientNet fallback
-        print("Warning: EfficientNet not available. Using ResNet fallback.")
-        from torchvision.models import resnet50
-        class EfficientNet:
-            @staticmethod
-            def from_pretrained(model_name, **kwargs):
-                return resnet50(pretrained=True)
+    # Fallback to torchvision ResNet if EfficientNet not available
+    print("Warning: EfficientNet not available. Using ResNet50 fallback.")
+    from torchvision.models import resnet50
+    class EfficientNet:
+        @staticmethod
+        def from_pretrained(model_name, **kwargs):
+            return resnet50(pretrained=True)
 import numpy as np
 
 # =============================================================================

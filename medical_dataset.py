@@ -8,73 +8,8 @@ import io
 import os
 import logging
 from pathlib import Path
-try:
-    from monai.transforms import (
-        Compose, LoadImaged, EnsureChannelFirstd, 
-        ScaleIntensityd, Resized, ToTensord,
-        RandRotated, RandZoomd, RandFlipd, 
-        RandGaussianNoised, RandAdjustContrastd,
-        RandAffined, RandGaussianSmoothd
-    )
-except ImportError:
-    # If MONAI is not installed, create minimal fallback transforms
-    print("Warning: MONAI not installed. Using minimal transforms.")
-    # Create dummy classes for basic functionality
-    class Compose:
-        def __init__(self, transforms):
-            self.transforms = transforms
-        def __call__(self, data):
-            for transform in self.transforms:
-                data = transform(data)
-            return data
-    
-    class LoadImaged:
-        def __call__(self, data):
-            return data
-    
-    class EnsureChannelFirstd:
-        def __call__(self, data):
-            return data
-    
-    class ScaleIntensityd:
-        def __call__(self, data):
-            return data
-    
-    class Resized:
-        def __call__(self, data):
-            return data
-    
-    class ToTensord:
-        def __call__(self, data):
-            return data
-    
-    class RandRotated:
-        def __call__(self, data):
-            return data
-    
-    class RandZoomd:
-        def __call__(self, data):
-            return data
-    
-    class RandFlipd:
-        def __call__(self, data):
-            return data
-    
-    class RandGaussianNoised:
-        def __call__(self, data):
-            return data
-    
-    class RandAdjustContrastd:
-        def __call__(self, data):
-            return data
-    
-    class RandAffined:
-        def __call__(self, data):
-            return data
-    
-    class RandGaussianSmoothd:
-        def __call__(self, data):
-            return data
+# Use PyTorch/torchvision transforms instead of MONAI
+import torchvision.transforms as transforms
 from config import (
     CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, 
     TRAINING_CONFIG, PREPROCESSING_CONFIG, 
@@ -241,30 +176,14 @@ class BinaryMedicalDataset(Dataset):
         
         # Apply transforms
         if self.transform:
-            # Prepare data dict for MONAI transforms (MONAI expects numpy arrays)
-            data_dict = {'image': image}  # image is already numpy array
-            data_dict = self.transform(data_dict)
-            image = data_dict['image']
-        
-        # Ensure image is a proper tensor with correct dimensions
-        if isinstance(image, np.ndarray):
-            image = torch.from_numpy(image).float()
-        
-        # Debug: Print tensor shape to understand the issue
-        print(f"Image tensor shape after transforms: {image.shape}")
-        
-        # Ensure image has correct dimensions [C, H, W]
-        if image.dim() == 2:  # [H, W]
-            image = image.unsqueeze(0)  # Add channel dimension -> [1, H, W]
-        elif image.dim() == 3:
-            # Check if it's [H, W, C] format
-            if image.shape[-1] == 3 or image.shape[-1] == 1:  # Last dimension is channel
-                image = image.permute(2, 0, 1)  # Convert [H, W, C] to [C, H, W]
-            elif image.shape[0] in [1, 3]:  # First dimension is channel
-                pass  # Already correct format [C, H, W]
-            else:
-                # If we can't determine, assume it's grayscale and add channel dimension
-                image = image.unsqueeze(0)  # Add channel dimension
+            # Convert numpy array to PIL Image for torchvision transforms
+            if len(image.shape) == 3 and image.shape[2] == 3:  # RGB image
+                image = Image.fromarray(image.astype(np.uint8), 'RGB')
+            else:  # Grayscale image
+                image = Image.fromarray(image.astype(np.uint8), 'L')
+            
+            # Apply torchvision transforms (returns tensor with correct dimensions)
+            image = self.transform(image)
         
         return {
             'image': image,
@@ -274,54 +193,38 @@ class BinaryMedicalDataset(Dataset):
         }
 
 def get_transforms(mode='train'):
-    """Get data transforms for training/validation using simple transforms"""
+    """Get data transforms for training/validation using PyTorch transforms"""
     
     if mode == 'train':
-        # Simple training transforms
-        transform = Compose([
-            Resized(keys=["image"], spatial_size=(224, 224)),
-            ScaleIntensityd(keys=["image"], minv=0.0, maxv=1.0),
-            ToTensord(keys=["image"])
+        # Training transforms with augmentation
+        transform = transforms.Compose([
+            transforms.Resize((256, 256)),
+            transforms.RandomCrop((224, 224)),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomRotation(degrees=15),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalization
         ])
     else:
         # Validation/test transforms (no augmentation)
-        transform = Compose([
-            Resized(keys=["image"], spatial_size=(224, 224)),
-            ScaleIntensityd(keys=["image"], minv=0.0, maxv=1.0),
-            ToTensord(keys=["image"])
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalization
         ])
     
     return transform
 
 def custom_collate_fn(batch):
-    """Custom collate function to handle tensor dimension issues"""
+    """Custom collate function - torchvision transforms ensure consistent dimensions"""
     images = []
     labels = []
     uids = []
     gleamer_findings = []
     
     for item in batch:
-        # Ensure consistent image dimensions
-        image = item['image']
-        if isinstance(image, torch.Tensor):
-            # Ensure [C, H, W] format
-            if image.dim() == 2:  # [H, W]
-                image = image.unsqueeze(0)  # [1, H, W]
-            elif image.dim() == 3:
-                if image.shape[0] not in [1, 3]:  # [H, W, C]
-                    image = image.permute(2, 0, 1)  # [C, H, W]
-            
-            # Ensure all images have the same spatial dimensions (224, 224)
-            if image.shape[-2:] != (224, 224):
-                # Resize to (224, 224) if needed
-                image = torch.nn.functional.interpolate(
-                    image.unsqueeze(0), 
-                    size=(224, 224), 
-                    mode='bilinear', 
-                    align_corners=False
-                ).squeeze(0)
-        
-        images.append(image)
+        images.append(item['image'])
         labels.append(item['label'])
         uids.append(item['uid'])
         gleamer_findings.append(item['gleamer_finding'])
