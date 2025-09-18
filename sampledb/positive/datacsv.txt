@@ -1,0 +1,25 @@
+"[
+  ""1.2.840.113619.2.305.4.2147483647.1754065802.400740.1"",
+  ""1.2.840.113619.2.305.4.2147483647.1754065867.629102.1"",
+  ""1.2.840.113619.2.305.4.2147483647.1754065900.5252.1"",
+  ""1.2.250.1.439.5.78.20250801164202388.2052137927"",
+  ""1.2.250.1.439.5.78.20250801164202388.1399657323"",
+  ""1.2.250.1.439.5.78.20250801164202387.405061938"",
+  ""1.2.250.1.439.5.78.20250801164202387.250348242""
+]"	1883988.001SRMC	1.2.410.200010.1090024.8151.465.1954107	LUMBAR SPINE COMPLTE	"[
+  ""LSPINE"",
+  ""LS_SPINE"",
+  ""L_SPINE""
+]"	['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1754065802.400740.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1754065867.629102.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1754065900.5252.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250801164202388.2052137927.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250801164202388.1399657323.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250801164202387.405061938.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250801164202387.250348242.jpg']	"CHRONIC BACK PAIN
+
+"	"3 views of the lumbar spine were obtained.
+
+"	"The lumbar vertebral alignment is normal. 
+
+Multilevel degenerative changes most severe L4-L5 through L5-S1 causing moderate to severe neural foraminal and spinal canal stenosis. Chronic compression fracture involving the superior endplate of the L2 vertebral body.
+
+No acute fracture, vertebral compression deformity or aggressive osseous lesions. 
+
+The paravertebral soft tissues are grossly unremarkable. 
+
+"	POSITIVE

@@ -1,0 +1,24 @@
+"[
+  ""1.2.840.113619.2.305.4.2147483647.1754082571.478768.1"",
+  ""1.2.840.113619.2.305.4.2147483647.1754082604.885986.1"",
+  ""1.2.840.113619.2.305.4.2147483647.1754082521.314036.1"",
+  ""1.2.250.1.439.5.78.20250801211650502.1630308455""
+]"	1884079.001SRMC	1.2.410.200010.1132835.5350.571.1954213	KNEES/BILAT AP STANDING	"[
+  ""KNEE""
+]"	['https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1754082571.478768.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1754082604.885986.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.840.113619.2.305.4.2147483647.1754082521.314036.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer/1.2.250.1.439.5.78.20250801211650502.1630308455.jpg']	"PAIN AND WEAKNESS IN LEGS
+
+"	"DI KNEES/BILAT AP STANDING
+
+"	": 
+
+There is no evidence of acute fracture or dislocation.
+
+Soft tissues are unremarkable.
+
+If symptoms persist, repeat radiographs can be performed in 7 to 10 days. 
+
+
+
+
+
+"	NEGATIVE
