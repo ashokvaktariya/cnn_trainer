@@ -54,12 +54,15 @@ class BinaryEfficientNet(nn.Module):
     def __init__(self, num_classes=2, dropout_rate=0.3, pretrained=True, **kwargs):
         super().__init__()
         
-        # Use EfficientNet-B7 backbone
+        # Use EfficientNet-B7 backbone without classifier
         self.backbone = EfficientNet.from_pretrained(
             "efficientnet-b7",
-            num_classes=num_classes,
+            num_classes=1000,  # Use default ImageNet classes
             dropout_rate=dropout_rate
         )
+        
+        # Remove the original classifier
+        self.backbone._fc = nn.Identity()
         
         # Get feature dimension from EfficientNet-B7
         feature_dim = 2560  # EfficientNet-B7 feature dimension
@@ -94,8 +97,8 @@ class BinaryEfficientNet(nn.Module):
             # If batch contains multiple images, take the first one
             x = x[:, 0]  # (batch_size, 3, 224, 224)
         
-        # Extract features using EfficientNet backbone
-        features = self.backbone(x)
+        # Extract features using EfficientNet backbone (without classifier)
+        features = self.backbone.extract_features(x)  # Get raw features
         
         # Apply classifier
         logits = self.classifier(features)
