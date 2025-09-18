@@ -457,8 +457,8 @@ def main():
     # Load data
     preparator.load_data()
     
-    # Filter valid images (use sample for testing)
-    preparator.filter_valid_images(sample_size=1000)  # Remove sample_size for full processing
+    # Filter valid images (full dataset processing)
+    preparator.filter_valid_images()  # Process full dataset
     
     # Filter for binary classification
     preparator.filter_binary_labels()
