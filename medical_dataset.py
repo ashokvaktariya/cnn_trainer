@@ -267,18 +267,12 @@ class BinaryMedicalDataset(Dataset):
         }
 
 def get_transforms(mode='train'):
-    """Get data transforms for training/validation"""
+    """Get data transforms for training/validation using simple transforms"""
     
     if mode == 'train':
-        # Training transforms with heavy augmentation
+        # Simple training transforms
         transform = Compose([
             Resized(keys=["image"], spatial_size=(224, 224)),
-            RandRotated(keys=["image"], range_x=15, prob=0.5),
-            RandZoomd(keys=["image"], min_zoom=0.8, max_zoom=1.2, prob=0.5),
-            RandFlipd(keys=["image"], prob=0.5),
-            RandGaussianNoised(keys=["image"], std=0.01, prob=0.3),
-            RandAdjustContrastd(keys=["image"], gamma=(0.8, 1.2), prob=0.3),
-            RandGaussianSmoothd(keys=["image"], sigma_x=(0.5, 1.0), prob=0.3),
             ScaleIntensityd(keys=["image"], minv=0.0, maxv=1.0),
             ToTensord(keys=["image"])
         ])
@@ -309,6 +303,16 @@ def custom_collate_fn(batch):
             elif image.dim() == 3:
                 if image.shape[0] not in [1, 3]:  # [H, W, C]
                     image = image.permute(2, 0, 1)  # [C, H, W]
+            
+            # Ensure all images have the same spatial dimensions (224, 224)
+            if image.shape[-2:] != (224, 224):
+                # Resize to (224, 224) if needed
+                image = torch.nn.functional.interpolate(
+                    image.unsqueeze(0), 
+                    size=(224, 224), 
+                    mode='bilinear', 
+                    align_corners=False
+                ).squeeze(0)
         
         images.append(image)
         labels.append(item['label'])
