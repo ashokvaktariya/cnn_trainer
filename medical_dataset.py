@@ -260,7 +260,7 @@ def get_transforms(mode='train'):
         transform = Compose([
             Resized(keys=["image"], spatial_size=(224, 224)),
             RandRotated(keys=["image"], range_x=15, prob=0.5),
-            RandZoomed(keys=["image"], min_zoom=0.8, max_zoom=1.2, prob=0.5),
+            RandZoomd(keys=["image"], min_zoom=0.8, max_zoom=1.2, prob=0.5),
             RandFlipd(keys=["image"], prob=0.5),
             RandGaussianNoised(keys=["image"], std=0.01, prob=0.3),
             RandAdjustContrastd(keys=["image"], gamma=(0.8, 1.2), prob=0.3),
