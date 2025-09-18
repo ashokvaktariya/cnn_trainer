@@ -68,7 +68,7 @@ class BinaryMedicalTrainer:
             
             if self.scaler:
                 # Mixed precision training
-                with autocast():
+                with autocast(device_type='cuda'):
                     outputs = self.model(images)
                     loss = criterion(outputs, labels)
                 
@@ -131,7 +131,7 @@ class BinaryMedicalTrainer:
                 labels = batch['label'].to(self.device)
                 
                 if self.scaler:
-                    with autocast():
+                    with autocast(device_type='cuda'):
                         outputs = self.model(images)
                         loss = criterion(outputs, labels)
                 else:
