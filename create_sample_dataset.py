@@ -14,12 +14,14 @@ from PIL import Image
 import numpy as np
 from tqdm import tqdm
 
-# Server configuration
-SERVER_IMAGES_DIR = "/sharedata01/CNN_data/gleamer/gleamer"
+# Server configuration - everything in same gleamer folder
+SERVER_BASE_DIR = "/sharedata01/CNN_data/gleamer/gleamer"
+SERVER_CSV_FILE = os.path.join(SERVER_BASE_DIR, "dicom_image_url_file.csv")
+SERVER_IMAGES_DIR = SERVER_BASE_DIR  # Images are in same directory as CSV
 LOCAL_IMAGES_DIR = "sampledb"  # Local fallback
 OUTPUT_DIR = "sampledb"  # Output directory name
 
-def create_sample_dataset(csv_file="dicom_image_url_file.csv", num_samples=20, output_dir=OUTPUT_DIR):
+def create_sample_dataset(csv_file=SERVER_CSV_FILE, num_samples=20, output_dir=OUTPUT_DIR):
     """
     Create sample dataset by copying existing images from server/local directory
     
@@ -31,7 +33,9 @@ def create_sample_dataset(csv_file="dicom_image_url_file.csv", num_samples=20, o
     
     print(f"🚀 Creating sample dataset with {num_samples} random samples...")
     print(f"📁 Output directory: {output_dir}")
-    print(f"🔍 Looking for images in: {SERVER_IMAGES_DIR}")
+    print(f"🔍 Server base directory: {SERVER_BASE_DIR}")
+    print(f"🔍 CSV file: {csv_file}")
+    print(f"🔍 Images directory: {SERVER_IMAGES_DIR}")
     print(f"🔍 Fallback directory: {LOCAL_IMAGES_DIR}")
     
     # Create output directory
@@ -103,10 +107,10 @@ def create_sample_dataset(csv_file="dicom_image_url_file.csv", num_samples=20, o
 def find_image_directory():
     """Find the best image directory to use (server or local)"""
     
-    # Check server directory first
-    if os.path.exists(SERVER_IMAGES_DIR):
-        print(f"✅ Found server images directory: {SERVER_IMAGES_DIR}")
-        return SERVER_IMAGES_DIR
+    # Check server directory first (everything in same gleamer folder)
+    if os.path.exists(SERVER_BASE_DIR):
+        print(f"✅ Found server base directory: {SERVER_BASE_DIR}")
+        return SERVER_BASE_DIR
     
     # Check local directory
     if os.path.exists(LOCAL_IMAGES_DIR):
@@ -287,9 +291,9 @@ def main():
     
     # Create sample dataset
     sample_dir = create_sample_dataset(
-        csv_file="dicom_image_url_file.csv",
+        csv_file=SERVER_CSV_FILE,  # Use server CSV path
         num_samples=20,
-        output_dir="sample_dataset"
+        output_dir=OUTPUT_DIR
     )
     
     # Analyze the dataset
