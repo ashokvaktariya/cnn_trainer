@@ -327,9 +327,27 @@ class BinaryModelEvaluator:
         # Add model configuration
         self.results['model_config'] = MODEL_CONFIGS['binary_classifier']
         
+        # Convert numpy types to native Python types for JSON serialization
+        def convert_numpy_types(obj):
+            if isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            else:
+                return obj
+        
+        # Convert results to JSON-serializable format
+        json_results = convert_numpy_types(self.results)
+        
         # Save results
         with open(save_path, 'w') as f:
-            json.dump(self.results, f, indent=2)
+            json.dump(json_results, f, indent=2)
         
         logger.info(f"📊 Evaluation report saved: {save_path}")
         

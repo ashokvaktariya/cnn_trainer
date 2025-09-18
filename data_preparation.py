@@ -296,8 +296,27 @@ class DataPreparator:
         # Save statistics
         stats_file = output_file.replace('.csv', '_stats.json')
         import json
+        
+        # Convert numpy types to native Python types for JSON serialization
+        def convert_numpy_types(obj):
+            if isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            else:
+                return obj
+        
+        # Convert stats to JSON-serializable format
+        json_stats = convert_numpy_types(self.stats)
+        
         with open(stats_file, 'w') as f:
-            json.dump(self.stats, f, indent=2)
+            json.dump(json_stats, f, indent=2)
         logger.info(f"📊 Statistics saved to: {stats_file}")
         
         return output_file
