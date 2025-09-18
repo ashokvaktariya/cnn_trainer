@@ -2,15 +2,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from monai.engines import SupervisedTrainer
-from monai.losses import DiceLoss, FocalLoss
-from monai.metrics import ROCAUCMetric, ConfusionMatrixMetric
-from monai.handlers import (
+from lib.monai.engines import SupervisedTrainer
+from lib.monai.losses import DiceLoss, FocalLoss
+from lib.monai.metrics import ROCAUCMetric, ConfusionMatrixMetric
+from lib.monai.handlers import (
     CheckpointSaver, StatsHandler, 
     ValidationHandler, LrScheduleHandler,
     EarlyStopHandler
 )
-from monai.networks.utils import one_hot
+from lib.monai.networks.utils import one_hot
 from sklearn.metrics import classification_report, confusion_matrix
 import numpy as np
 import os

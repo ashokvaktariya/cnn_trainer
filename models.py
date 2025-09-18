@@ -15,7 +15,7 @@ class ImageOnlyDenseNet(nn.Module):
     def __init__(self, num_classes=2, dropout_rate=0.3):
         super().__init__()
         
-        # Use MONAI's DenseNet121
+        # Use DenseNet121
         self.backbone = DenseNet121(
             spatial_dims=2,
             in_channels=3,  # RGB images
@@ -56,7 +56,7 @@ class ImageOnlyEfficientNet(nn.Module):
     def __init__(self, num_classes=2, model_name="efficientnet-b0"):
         super().__init__()
         
-        # Use MONAI's EfficientNet
+        # Use EfficientNet
         self.backbone = EfficientNet(
             model_name=model_name,
             spatial_dims=2,
