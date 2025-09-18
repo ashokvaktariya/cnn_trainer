@@ -21,8 +21,7 @@ wheels/
 *.egg
 MANIFEST
 
-# MONAI Library - Include lib directory
-# lib/ directory is now included in the repository
+# Library directory
 
 # PyInstaller
 *.manifest
