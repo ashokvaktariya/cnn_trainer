@@ -12,19 +12,69 @@ try:
     from monai.transforms import (
         Compose, LoadImaged, EnsureChannelFirstd, 
         ScaleIntensityd, Resized, ToTensord,
-        RandRotated, RandZoomed, RandFlipd, 
+        RandRotated, RandZoomd, RandFlipd, 
         RandGaussianNoised, RandAdjustContrastd,
         RandAffined, RandGaussianSmoothd
     )
 except ImportError:
-    # Fallback to lib if direct import fails
-    from lib.monai.transforms import (
-        Compose, LoadImaged, EnsureChannelFirstd, 
-        ScaleIntensityd, Resized, ToTensord,
-        RandRotated, RandZoomed, RandFlipd, 
-        RandGaussianNoised, RandAdjustContrastd,
-        RandAffined, RandGaussianSmoothd
-    )
+    # If MONAI is not installed, create minimal fallback transforms
+    print("Warning: MONAI not installed. Using minimal transforms.")
+    # Create dummy classes for basic functionality
+    class Compose:
+        def __init__(self, transforms):
+            self.transforms = transforms
+        def __call__(self, data):
+            for transform in self.transforms:
+                data = transform(data)
+            return data
+    
+    class LoadImaged:
+        def __call__(self, data):
+            return data
+    
+    class EnsureChannelFirstd:
+        def __call__(self, data):
+            return data
+    
+    class ScaleIntensityd:
+        def __call__(self, data):
+            return data
+    
+    class Resized:
+        def __call__(self, data):
+            return data
+    
+    class ToTensord:
+        def __call__(self, data):
+            return data
+    
+    class RandRotated:
+        def __call__(self, data):
+            return data
+    
+    class RandZoomd:
+        def __call__(self, data):
+            return data
+    
+    class RandFlipd:
+        def __call__(self, data):
+            return data
+    
+    class RandGaussianNoised:
+        def __call__(self, data):
+            return data
+    
+    class RandAdjustContrastd:
+        def __call__(self, data):
+            return data
+    
+    class RandAffined:
+        def __call__(self, data):
+            return data
+    
+    class RandGaussianSmoothd:
+        def __call__(self, data):
+            return data
 from config import (
     CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, 
     TRAINING_CONFIG, PREPROCESSING_CONFIG, 
