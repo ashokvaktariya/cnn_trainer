@@ -282,19 +282,20 @@ class BinaryMedicalInference:
         return results
     
     def predict_directory(self, directory_path, batch_size=32, file_extensions=None):
-        """Predict all images in a directory"""
+        """Predict all images in a directory (including subdirectories)"""
         if file_extensions is None:
             file_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
         
-        # Find all image files
+        # Find all image files recursively
         image_paths = []
         for ext in file_extensions:
-            image_paths.extend(Path(directory_path).glob(f"*{ext}"))
-            image_paths.extend(Path(directory_path).glob(f"*{ext.upper()}"))
+            # Search recursively in subdirectories
+            image_paths.extend(Path(directory_path).glob(f"**/*{ext}"))
+            image_paths.extend(Path(directory_path).glob(f"**/*{ext.upper()}"))
         
         image_paths = [str(p) for p in image_paths]
         
-        logger.info(f"📁 Found {len(image_paths)} images in {directory_path}")
+        logger.info(f"📁 Found {len(image_paths)} images in {directory_path} (including subdirectories)")
         
         if len(image_paths) == 0:
             logger.warning("⚠️ No images found in directory")
