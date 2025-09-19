@@ -95,6 +95,7 @@ dmypy.json
 checkpoints/
 results/
 logs/
+models/
 *.pth
 *.pt
 *.pkl
