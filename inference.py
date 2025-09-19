@@ -104,7 +104,7 @@ class BinaryMedicalInference:
                 img_array = (img_array - np.array(self.normalize_mean)) / np.array(self.normalize_std)
                 
                 # Convert to tensor and add batch dimension
-                img_tensor = torch.from_numpy(img_array).permute(2, 0, 1).unsqueeze(0)
+                img_tensor = torch.from_numpy(img_array).permute(2, 0, 1).unsqueeze(0).float()
                 
                 return img_tensor
                 
@@ -237,7 +237,7 @@ class BinaryMedicalInference:
                 continue
             
             # Stack batch
-            batch_tensor = torch.cat(batch_images, dim=0).to(self.device)
+            batch_tensor = torch.cat(batch_images, dim=0).to(self.device).float()
             
             # Inference
             with torch.no_grad():
