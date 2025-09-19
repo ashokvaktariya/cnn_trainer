@@ -89,7 +89,6 @@ dmypy.json
 
 # Data files - exclude from git
 *.csv
-*.md
 
 # Model checkpoints and results
 checkpoints/
