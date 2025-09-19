@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 CSV_FILE = "/sharedata01/CNN_data/gleamer/gleamer/dicom_image_url_file.csv"
 IMAGES_DIR = "/sharedata01/CNN_data/gleamer/gleamer"
 OUTPUT_DIR = "/sharedata01/CNN_data/medical_classification/test_images"
-SAMPLES_PER_LABEL = 10  # Number of images to copy per label
+SAMPLES_PER_LABEL = 20  # Number of images to copy per label
 
 def is_valid_image(image_path):
     """Check if image is valid (not blank/corrupted)"""
@@ -89,57 +89,50 @@ def create_test_images():
         if copied_count[label] >= SAMPLES_PER_LABEL:
             continue
         
-        # Parse UIDs
+        # Parse download URLs to get image filenames
         try:
-            uids_str = row['SOP_INSTANCE_UID_ARRAY']
-            if pd.isna(uids_str) or uids_str == '':
+            download_urls_str = row['download_urls']
+            if pd.isna(download_urls_str) or download_urls_str == '':
                 continue
                 
-            # Parse UIDs (handle both string and list formats)
-            if isinstance(uids_str, str):
-                if uids_str.startswith('[') and uids_str.endswith(']'):
+            # Parse URLs (handle both string and list formats)
+            if isinstance(download_urls_str, str):
+                if download_urls_str.startswith('[') and download_urls_str.endswith(']'):
                     # Remove brackets and split
-                    uids_str = uids_str[1:-1]
-                uids = [uid.strip().strip("'\"") for uid in uids_str.split(',')]
+                    download_urls_str = download_urls_str[1:-1]
+                urls = [url.strip().strip("'\"") for url in download_urls_str.split(',')]
             else:
-                uids = [str(uids_str)]
+                urls = [str(download_urls_str)]
             
             # Try to find valid images for this record
-            for uid in uids:
+            for url in urls:
                 if copied_count[label] >= SAMPLES_PER_LABEL:
                     break
                     
-                uid = uid.strip()
-                if not uid:
+                url = url.strip()
+                if not url:
                     continue
                 
-                # Look for image file
-                possible_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
-                image_path = None
+                # Extract filename from URL
+                filename = url.split('/')[-1]
+                if not filename.endswith('.jpg'):
+                    continue
                 
-                for ext in possible_extensions:
-                    potential_path = os.path.join(IMAGES_DIR, f"{uid}{ext}")
-                    if os.path.exists(potential_path):
-                        image_path = potential_path
-                        break
+                # Look for image file in local directory
+                image_path = os.path.join(IMAGES_DIR, filename)
                 
-                if image_path and is_valid_image(image_path):
+                if os.path.exists(image_path) and is_valid_image(image_path):
                     # Create filename with label
-                    filename = f"LABEL_{label}_UID_{uid}_IDX_{idx}"
-                    if image_path.lower().endswith('.jpg') or image_path.lower().endswith('.jpeg'):
-                        filename += '.jpg'
-                    elif image_path.lower().endswith('.png'):
-                        filename += '.png'
-                    else:
-                        filename += '.jpg'  # Default to jpg
+                    original_filename = filename.replace('.jpg', '')
+                    output_filename = f"LABEL_{label}_{original_filename}_IDX_{idx}.jpg"
                     
                     # Copy to appropriate directory
-                    output_path = os.path.join(OUTPUT_DIR, label.lower(), filename)
+                    output_path = os.path.join(OUTPUT_DIR, label.lower(), output_filename)
                     
                     try:
                         shutil.copy2(image_path, output_path)
                         copied_count[label] += 1
-                        logger.info(f"✅ Copied {label}: {filename}")
+                        logger.info(f"✅ Copied {label}: {output_filename}")
                         
                         if copied_count[label] >= SAMPLES_PER_LABEL:
                             break
@@ -188,7 +181,7 @@ def create_test_images():
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description='Create test images for inference testing')
-    parser.add_argument('--samples', type=int, default=10, help='Number of samples per label (default: 10)')
+    parser.add_argument('--samples', type=int, default=20, help='Number of samples per label (default: 20)')
     parser.add_argument('--output', type=str, default='/sharedata01/CNN_data/medical_classification/test_images', help='Output directory (default: /sharedata01/CNN_data/medical_classification/test_images)')
     
     args = parser.parse_args()
