@@ -140,6 +140,9 @@ Thumbs.db
 # Server specific
 /sharedata01/
 
+# S3 to HF upload scripts (contains credentials)
+s3_to_hf/
+
 # MONAI specific exclusions - removed to include MONAI library
 # monai/
 # monai/**
