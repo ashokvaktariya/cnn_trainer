@@ -189,10 +189,11 @@ def main():
     """Main function"""
     parser = argparse.ArgumentParser(description='Create test images for inference testing')
     parser.add_argument('--samples', type=int, default=10, help='Number of samples per label (default: 10)')
-    parser.add_argument('--output', type=str, default=OUTPUT_DIR, help='Output directory (default: /sharedata01/CNN_data/medical_classification/test_images)')
+    parser.add_argument('--output', type=str, default='/sharedata01/CNN_data/medical_classification/test_images', help='Output directory (default: /sharedata01/CNN_data/medical_classification/test_images)')
     
     args = parser.parse_args()
     
+    # Update global variables
     global SAMPLES_PER_LABEL, OUTPUT_DIR
     SAMPLES_PER_LABEL = args.samples
     OUTPUT_DIR = args.output
