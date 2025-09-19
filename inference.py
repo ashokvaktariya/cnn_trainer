@@ -379,7 +379,8 @@ def main():
     parser.add_argument('--checkpoint', type=str, 
                        default=os.path.join(CHECKPOINTS_DIR, 'binary_classifier_best.pth'),
                        help='Path to model checkpoint')
-    parser.add_argument('--input', type=str, required=True,
+    parser.add_argument('--input', type=str, 
+                       default='/sharedata01/CNN_data/medical_classification/test_images',
                        help='Input image path or directory')
     parser.add_argument('--output', type=str, 
                        help='Output file path for results')
