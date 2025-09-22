@@ -1,0 +1,87 @@
+UID Pattern Sample Copy Summary
+==================================================
+
+📊 PATTERN ANALYSIS:
+------------------------------
+
+🔍 Pattern: 1.2.250
+  Description: Summary_Reports
+  Total UIDs available: 22,064
+  Samples copied: 5
+  Samples not found: 0
+  Success rate: 100.0%
+  Copied files:
+    - sample_1_1.2.250.1.439.5.78.20250822081238659.1745158393.jpg
+    - sample_2_1.2.250.1.439.5.78.20250829180716529.1115938225.jpg
+    - sample_3_1.2.250.1.439.5.78.20250812020118353.84649229.jpg
+    - sample_4_1.2.250.1.439.5.78.20250816192804037.245183534.jpg
+    - sample_5_1.2.250.1.439.5.78.20250821170801011.351861951.jpg
+
+🔍 Pattern: 1.2.840.113619
+  Description: Xray_Images_Standard
+  Total UIDs available: 18,302
+  Samples copied: 5
+  Samples not found: 0
+  Success rate: 100.0%
+  Copied files:
+    - sample_1_1.2.840.113619.2.369.4.2147483647.1754648062.71944.jpg
+    - sample_2_1.2.840.113619.2.203.4.2147483647.1754623360.283952.jpg
+    - sample_3_1.2.840.113619.2.203.4.2147483647.1756027962.88309.jpg
+    - sample_4_1.2.840.113619.2.203.4.2147483647.1756919957.572575.jpg
+    - sample_5_1.2.840.113619.2.420.4.8323328.1755457818.84266.1.jpg
+
+🔍 Pattern: 1.2.410.200010
+  Description: Other_Images_German
+  Total UIDs available: 5,863
+  Samples copied: 5
+  Samples not found: 0
+  Success rate: 100.0%
+  Copied files:
+    - sample_1_1.2.410.200010.202508051423033018368.20250805.90000.0.jpg
+    - sample_2_1.2.410.200010.1.22013.1.1.1754676591.22577.jpg
+    - sample_3_1.2.410.200010.8178.202508071348356898368.20250807.90000.29.jpg
+    - sample_4_1.2.410.200010.95.202508011206068218368.20250801.90000.0.jpg
+    - sample_5_1.2.410.200010.1079.202508061307125818368.20250806.90000.0.jpg
+
+🔍 Pattern: 1.2.840
+  Description: Xray_Images_General
+  Total UIDs available: 5,063
+  Samples copied: 5
+  Samples not found: 0
+  Success rate: 100.0%
+  Copied files:
+    - sample_1_1.2.840.114093.1.1.20258823847.3357806213.1416.3463.jpg
+    - sample_2_1.2.840.114093.1.1.202598224811.3969336888.4724.4910.jpg
+    - sample_3_1.2.840.113711.640.1754525720.11495283.10910504.jpg
+    - sample_4_1.2.840.113711.46554799.21148.778878264.26.1479325270.12.jpg
+    - sample_5_1.2.840.113564.10.1.318166371910433182901372552415468159130.jpg
+
+🔍 Pattern: 1.2.392.200036
+  Description: Xray_Images_Alternative
+  Total UIDs available: 6,729
+  Samples copied: 5
+  Samples not found: 0
+  Success rate: 100.0%
+  Copied files:
+    - sample_1_1.2.392.200036.9107.307.26699.20250827.44237.1045567.jpg
+    - sample_2_1.2.392.200036.9107.307.13257.20250815.162130.1067876.jpg
+    - sample_3_1.2.392.200036.9107.307.27670.20250820.221021.1015393.jpg
+    - sample_4_1.2.392.200036.9107.307.22331.20250805.75514.1033685.jpg
+    - sample_5_1.2.392.200036.9107.307.26699.20250813.185605.1043465.jpg
+
+📁 Output Structure:
+  uid_samples/
+    ├── Summary_Reports/
+    │   └── sample_*.jpg files
+    ├── Xray_Images_Standard/
+    │   └── sample_*.jpg files
+    ├── Xray_Images_Alternative/
+    │   └── sample_*.jpg files
+    ├── Other_Images_German/
+    │   └── sample_*.jpg files
+    ├── Xray_Images_General/
+    │   └── sample_*.jpg files
+
+📄 Files:
+  - copy_results.json (detailed results)
+  - copy_summary.txt (this summary)
