@@ -204,7 +204,7 @@ def main():
     
     # Default paths (update these for your setup)
     csv_path = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/processed_dicom_image_url_file.csv"
-    image_root = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/gleamer-images"
+    image_root = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images"
     output_dir = "uid_samples"
     
     print(f"📄 CSV file: {csv_path}")
