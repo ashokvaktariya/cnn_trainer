@@ -72,8 +72,8 @@ class DataPreparator:
     
     def _find_image_file(self, uid):
         """Find image file for given UID"""
-        base_dir = "/sharedata01/CNN_data/gleamer/gleamer"
-        possible_extensions = ['.jpg', '.jpeg', '.png', '.dcm']
+        base_dir = self.image_root  # Use config path
+        possible_extensions = ['.jpg', '.jpeg', '.png', '.dcm', '.dicom']
         
         for ext in possible_extensions:
             # Check main directory
@@ -82,7 +82,7 @@ class DataPreparator:
                 return image_path
             
             # Check subdirectories
-            for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2']:
+            for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2', 'fracture', 'normal']:
                 image_path = os.path.join(base_dir, subdir, f"{uid}{ext}")
                 if os.path.exists(image_path):
                     return image_path
@@ -142,10 +142,18 @@ class DataPreparator:
             # Parse UIDs
             uid_string = str(row['SOP_INSTANCE_UID_ARRAY'])
             try:
-                if ',' in uid_string:
-                    uids = [uid.strip().strip('"\'[]') for uid in uid_string.split(',')]
-                else:
-                    uids = [uid_string.strip().strip('"\'[]')]
+                import json
+                # Try to parse as JSON array first
+                try:
+                    uids = json.loads(uid_string)
+                    if not isinstance(uids, list):
+                        uids = [uids]
+                except json.JSONDecodeError:
+                    # Fallback to comma-separated parsing
+                    if ',' in uid_string:
+                        uids = [uid.strip().strip('"\'[]') for uid in uid_string.split(',')]
+                    else:
+                        uids = [uid_string.strip().strip('"\'[]')]
                 
                 # Check for valid images
                 has_valid_image = False
@@ -186,8 +194,9 @@ class DataPreparator:
         """Filter data for binary classification (exclude DOUBT)"""
         logger.info("🏷️ Filtering for binary classification...")
         
-        if self.clean_data is None:
+        if self.clean_data is None or len(self.clean_data) == 0:
             logger.error("❌ No clean data available. Run filter_valid_images() first.")
+            logger.error("❌ This usually means no valid images were found. Check image paths.")
             return None
         
         # Exclude DOUBT cases
