@@ -1,0 +1,38 @@
+=== SAMPLE DATA ===
+Row Index: 6
+GLEAMER Finding: NEGATIVE
+Accession Number: 1935070.001
+Study Description: XRAY KNEE LT 4 VIEWS
+Body Part: [
+  "KNEE"
+]
+Clinical Indication: M25.562, PAIN IN LEFT KNEE
+
+
+Exam Technique: XRAY KNEE LT 4 VIEWS
+
+
+Findings: There is no evidence of acute fracture or dislocation.
+
+Moderate left knee osteoarthritis.
+
+The alignment is anatomical.
+
+There is no radiopaque foreign body.
+
+
+
+
+
+
+
+
+
+Number of Images: 5
+
+=== IMAGES ===
+Image 1: 1.3.6.1.4.1.19179.1.1152153178848684.3.8524.178111.jpg (UID: 1.3.6.1.4.1.19179.1.1152153178848684.3.8524.178111)
+Image 2: 1.3.6.1.4.1.19179.1.1152153178848684.3.8455.178109.jpg (UID: 1.3.6.1.4.1.19179.1.1152153178848684.3.8455.178109)
+Image 3: 1.3.6.1.4.1.19179.1.1152153178848684.3.8364.178107.jpg (UID: 1.3.6.1.4.1.19179.1.1152153178848684.3.8364.178107)
+Image 4: 1.3.6.1.4.1.19179.1.1152153178848684.3.8733.178115.jpg (UID: 1.3.6.1.4.1.19179.1.1152153178848684.3.8733.178115)
+Image 5: 1.2.250.1.439.5.78.20250902191721330.1368279055.jpg (UID: 1.2.250.1.439.5.78.20250902191721330.1368279055)

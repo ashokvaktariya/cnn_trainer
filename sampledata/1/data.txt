@@ -1,0 +1,24 @@
+=== SAMPLE DATA ===
+Row Index: 1
+GLEAMER Finding: NEGATIVE
+Accession Number: 2218534.001DVG
+Study Description: R SHOULDER COMPLETE XRAY
+Body Part: [
+  "SHOULDER"
+]
+Clinical Indication: H/O UPP HUM FX 2022, PAIN
+
+TECHNICAL DATA:  3 views were obtained of the right shoulder.
+
+
+Exam Technique: nan
+Findings: There is no fracture or focal bone abnormality. The glenohumeral joint is normally maintained. The acromioclavicular joint appears normal. The humeral head is not high riding. Adjacent soft tissues are within normal limits.  
+
+
+Number of Images: 4
+
+=== IMAGES ===
+Image 1: 1.2.840.113619.2.305.4.2147483647.1755634752.456323.jpg (UID: 1.2.840.113619.2.305.4.2147483647.1755634752.456323)
+Image 2: 1.2.840.113619.2.305.4.2147483647.1755634760.263837.jpg (UID: 1.2.840.113619.2.305.4.2147483647.1755634760.263837)
+Image 3: 1.2.840.113619.2.305.4.2147483647.1755634799.262457.jpg (UID: 1.2.840.113619.2.305.4.2147483647.1755634799.262457)
+Image 4: 1.2.250.1.439.5.78.20250819223608846.1402224705.jpg (UID: 1.2.250.1.439.5.78.20250819223608846.1402224705)

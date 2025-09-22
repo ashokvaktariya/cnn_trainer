@@ -1,0 +1,36 @@
+=== SAMPLE DATA ===
+Row Index: 8
+GLEAMER Finding: NEGATIVE
+Accession Number: 2.03E+11
+Study Description: nan
+Body Part: [
+  "KNEE"
+]
+Clinical Indication: R/O Fracture
+
+
+
+Exam Technique: 3 radiographic views of the left knee were obtained.
+
+
+
+Findings: Normal bony alignment
+
+No fracture or dislocation.
+
+No joint effusion
+
+No radiopaque foreign bodies
+
+
+
+
+
+
+Number of Images: 4
+
+=== IMAGES ===
+Image 1: 1.3.6.1.4.1.19179.1.11402367515788213.3.5309.27761.jpg (UID: 1.3.6.1.4.1.19179.1.11402367515788213.3.5309.27761)
+Image 2: 1.3.6.1.4.1.19179.1.11402367515788213.3.5387.27762.jpg (UID: 1.3.6.1.4.1.19179.1.11402367515788213.3.5387.27762)
+Image 3: 1.3.6.1.4.1.19179.1.11402367515788213.3.5573.27763.jpg (UID: 1.3.6.1.4.1.19179.1.11402367515788213.3.5573.27763)
+Image 4: 1.2.250.1.439.5.78.20250804231655361.954899344.jpg (UID: 1.2.250.1.439.5.78.20250804231655361.954899344)

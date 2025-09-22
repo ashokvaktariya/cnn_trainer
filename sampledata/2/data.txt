@@ -1,0 +1,24 @@
+=== SAMPLE DATA ===
+Row Index: 2
+GLEAMER Finding: NEGATIVE
+Accession Number: 2.03E+12
+Study Description: XR LUMBAR SPINE 2-3 VIEWS
+Body Part: [
+  "LSPINE"
+]
+Clinical Indication: hardware
+
+
+Exam Technique: AP, lateral, and spot lateral views of the lumbar spine are obtained.
+
+
+Findings: There is surgical fusion hardware at L4/5 and L5/S1.  The vertebral body heights are maintained. No abnormal periprosthetic lucencies.  No evidence of fracture or subluxation.
+
+
+Number of Images: 4
+
+=== IMAGES ===
+Image 1: 1.2.250.1.439.5.78.20250816215327678.817125860.jpg (UID: 1.2.250.1.439.5.78.20250816215327678.817125860)
+Image 2: 1.2.840.113619.2.420.4.8323328.1755380454.913822.1.jpg (UID: 1.2.840.113619.2.420.4.8323328.1755380454.913822.1)
+Image 3: 1.2.840.113619.2.420.4.8323328.1755380548.732839.1.jpg (UID: 1.2.840.113619.2.420.4.8323328.1755380548.732839.1)
+Image 4: 1.2.840.113619.2.420.4.8323328.1755380510.36232.1.jpg (UID: 1.2.840.113619.2.420.4.8323328.1755380510.36232.1)

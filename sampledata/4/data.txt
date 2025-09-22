@@ -1,0 +1,23 @@
+=== SAMPLE DATA ===
+Row Index: 4
+GLEAMER Finding: NEGATIVE
+Accession Number: SR100425002
+Study Description: XR THORACIC SPINE 2 VIEW
+Body Part: [
+  "TSPINE"
+]
+Clinical Indication: pain
+
+TECHNICAL DATA: Frontal,  and lateral views were obtained of the thoracic spine.
+
+
+Exam Technique: nan
+Findings: Thoracic alignment is anatomic. Disk heights are maintained. Vertebral body heights are maintained and there is no endplate defect. Paraspinal soft tissues are within normal limits. 
+
+
+Number of Images: 3
+
+=== IMAGES ===
+Image 1: 1.2.392.200036.9107.307.23177.20250822.110326.1019369.jpg (UID: 1.2.392.200036.9107.307.23177.20250822.110326.1019369)
+Image 2: 1.2.392.200036.9107.307.23177.20250822.110326.1019370.jpg (UID: 1.2.392.200036.9107.307.23177.20250822.110326.1019370)
+Image 3: 1.2.250.1.439.5.78.20250822181850505.1059433840.jpg (UID: 1.2.250.1.439.5.78.20250822181850505.1059433840)
