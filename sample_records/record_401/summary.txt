@@ -1,0 +1,11 @@
+Record 401 Summary
+==============================
+
+GLEAMER_FINDING: NEGATIVE
+STUDY_DESCRIPTION: XRAY HAND RT COMP
+BODY_PART_ARRAY: [
+  "HAND"
+]
+Images found: 0
+Images not found: 4
+Total URLs: 4

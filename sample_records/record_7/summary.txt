@@ -1,0 +1,11 @@
+Record 7 Summary
+==============================
+
+GLEAMER_FINDING: NEGATIVE
+STUDY_DESCRIPTION: FEMUR 2 VIEWS
+BODY_PART_ARRAY: [
+  "FEMUR"
+]
+Images found: 0
+Images not found: 3
+Total URLs: 3

@@ -1,0 +1,23 @@
+{
+  "record_index": 55,
+  "gleamer_finding": "NEGATIVE",
+  "study_description": "ABDOMEN,SINGLE VIEW(KUB)",
+  "body_part_array": "[\n  \"ABDOMEN\"\n]",
+  "clinical_indication": "dilated bowel loops\n\n",
+  "exam_technique": "Single view of the abdomen and pelvis is available for evaluation.\n\n",
+  "findings": " \n\nNonspecific bowel gas pattern.  Moderate amount of fecal material and gas within the colon. No evidence of bowel obstruction. No abnormal calcifications are noted.  The lung bases outside the field-of-view.\n\nFoley catheter is noted in place with possible rectal tube.\n\nAbnormal configuration of the femoral head and neck regions bilaterally which is most likely positional. Otherwise, no evidence for acute osseous abnormalities.\n\n\n\n\n\n",
+  "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250824235741465.1990667430.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.418.4.8323328.1756079300.74132.1.jpg']",
+  "images_found": [],
+  "images_not_found": [
+    {
+      "url_index": 0,
+      "filename": "1.2.250.1.439.5.78.20250824235741465.1990667430.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250824235741465.1990667430.jpg"
+    },
+    {
+      "url_index": 1,
+      "filename": "1.2.840.113619.2.418.4.8323328.1756079300.74132.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.418.4.8323328.1756079300.74132.1.jpg"
+    }
+  ]
+}

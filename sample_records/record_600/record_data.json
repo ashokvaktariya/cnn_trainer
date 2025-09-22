@@ -1,0 +1,28 @@
+{
+  "record_index": 600,
+  "gleamer_finding": "NEGATIVE",
+  "study_description": "XR HUMERUS RIGHT",
+  "body_part_array": "[\n  \"HUMERUS\"\n]",
+  "clinical_indication": "post op eval\n\n\n\n",
+  "exam_technique": "XR HUMERUS RIGHT performed. \n\n",
+  "findings": "There is plate and screw fixation of prior fracture of the proximal humerus around humeral stem component of shoulder arthroplasty. Gross anatomic alignment.\n\n\n\n",
+  "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067326.460516.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067214.998742.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801171236017.580396458.jpg']",
+  "images_found": [
+    {
+      "url_index": 0,
+      "filename": "1.2.840.113619.2.305.4.2147483647.1754067326.460516.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067326.460516.1.jpg"
+    },
+    {
+      "url_index": 1,
+      "filename": "1.2.840.113619.2.305.4.2147483647.1754067214.998742.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067214.998742.1.jpg"
+    },
+    {
+      "url_index": 2,
+      "filename": "1.2.250.1.439.5.78.20250801171236017.580396458.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801171236017.580396458.jpg"
+    }
+  ],
+  "images_not_found": []
+}

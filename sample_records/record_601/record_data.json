@@ -1,0 +1,43 @@
+{
+  "record_index": 601,
+  "gleamer_finding": "NEGATIVE",
+  "study_description": "XR HIP WITH PELVIS LEFT 3 VIEW",
+  "body_part_array": "[\n  \"HIP\",\n  \"PELVIS\"\n]",
+  "clinical_indication": "fall with pain \n\n",
+  "exam_technique": "Single frontal view the pelvis 2 views left hip performed\n\n\n\n",
+  "findings": "Pelvis is symmetric. Bilateral total hip arthroplasty with normal alignment of arthroplasty components. No hardware complication. No fracture or dislocation identified. No osseous lesions. Soft tissues are normal.\n\n\n\n",
+  "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064283.371943.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064309.440264.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064464.747745.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064381.376918.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064340.957056.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801162400352.609856600.jpg']",
+  "images_found": [
+    {
+      "url_index": 0,
+      "filename": "1.2.840.113619.2.420.4.8323328.1754064283.371943.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064283.371943.1.jpg"
+    },
+    {
+      "url_index": 1,
+      "filename": "1.2.840.113619.2.420.4.8323328.1754064309.440264.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064309.440264.1.jpg"
+    },
+    {
+      "url_index": 2,
+      "filename": "1.2.840.113619.2.420.4.8323328.1754064464.747745.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064464.747745.1.jpg"
+    },
+    {
+      "url_index": 3,
+      "filename": "1.2.840.113619.2.420.4.8323328.1754064381.376918.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064381.376918.1.jpg"
+    },
+    {
+      "url_index": 4,
+      "filename": "1.2.840.113619.2.420.4.8323328.1754064340.957056.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064340.957056.1.jpg"
+    },
+    {
+      "url_index": 5,
+      "filename": "1.2.250.1.439.5.78.20250801162400352.609856600.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801162400352.609856600.jpg"
+    }
+  ],
+  "images_not_found": []
+}

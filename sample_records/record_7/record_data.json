@@ -1,0 +1,28 @@
+{
+  "record_index": 7,
+  "gleamer_finding": "NEGATIVE",
+  "study_description": "FEMUR 2 VIEWS",
+  "body_part_array": "[\n  \"FEMUR\"\n]",
+  "clinical_indication": "TRAUMA, HIT BY CAR, R/O FRACTURE\n\n",
+  "exam_technique": "2 radiographic views of the left femur were obtained.\n\n",
+  "findings": "There is no evidence of acute fracture or dislocation with a proximal femur outside the field-of-view.\n\nThe alignment is anatomical.\n\n7 mm Linear density within the posterior proximal thigh soft tissues which may be external to the patient or may represent a foreign body .  Recommend clinical correlation.\n\n\n\n\n\n",
+  "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250821230046650.277368386.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1755816425.207822.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1755816455.690590.1.jpg']",
+  "images_found": [],
+  "images_not_found": [
+    {
+      "url_index": 0,
+      "filename": "1.2.250.1.439.5.78.20250821230046650.277368386.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250821230046650.277368386.jpg"
+    },
+    {
+      "url_index": 1,
+      "filename": "1.2.840.113619.2.203.4.2147483647.1755816425.207822.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1755816425.207822.1.jpg"
+    },
+    {
+      "url_index": 2,
+      "filename": "1.2.840.113619.2.203.4.2147483647.1755816455.690590.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1755816455.690590.1.jpg"
+    }
+  ]
+}

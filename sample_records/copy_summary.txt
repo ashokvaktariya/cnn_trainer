@@ -1,0 +1,19 @@
+Sample Records Copy Summary
+========================================
+
+Records processed: 3
+Total images found: 15
+Total images not found: 0
+Success rate: 100.0%
+
+Record Details:
+--------------------
+Record 0: NEGATIVE - 3 images
+Record 1: NEGATIVE - 6 images
+Record 2: NEGATIVE - 6 images
+
+Output directory: sample_records
+Each record folder contains:
+  - record_data.json (detailed data)
+  - summary.txt (quick summary)
+  - image_*.jpg (associated images)

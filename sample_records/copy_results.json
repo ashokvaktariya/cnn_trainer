@@ -1,0 +1,116 @@
+[
+  {
+    "record_index": 600,
+    "gleamer_finding": "NEGATIVE",
+    "study_description": "XR HUMERUS RIGHT",
+    "body_part_array": "[\n  \"HUMERUS\"\n]",
+    "clinical_indication": "post op eval\n\n\n\n",
+    "exam_technique": "XR HUMERUS RIGHT performed. \n\n",
+    "findings": "There is plate and screw fixation of prior fracture of the proximal humerus around humeral stem component of shoulder arthroplasty. Gross anatomic alignment.\n\n\n\n",
+    "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067326.460516.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067214.998742.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801171236017.580396458.jpg']",
+    "images_found": [
+      {
+        "url_index": 0,
+        "filename": "1.2.840.113619.2.305.4.2147483647.1754067326.460516.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067326.460516.1.jpg"
+      },
+      {
+        "url_index": 1,
+        "filename": "1.2.840.113619.2.305.4.2147483647.1754067214.998742.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.305.4.2147483647.1754067214.998742.1.jpg"
+      },
+      {
+        "url_index": 2,
+        "filename": "1.2.250.1.439.5.78.20250801171236017.580396458.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801171236017.580396458.jpg"
+      }
+    ],
+    "images_not_found": []
+  },
+  {
+    "record_index": 601,
+    "gleamer_finding": "NEGATIVE",
+    "study_description": "XR HIP WITH PELVIS LEFT 3 VIEW",
+    "body_part_array": "[\n  \"HIP\",\n  \"PELVIS\"\n]",
+    "clinical_indication": "fall with pain \n\n",
+    "exam_technique": "Single frontal view the pelvis 2 views left hip performed\n\n\n\n",
+    "findings": "Pelvis is symmetric. Bilateral total hip arthroplasty with normal alignment of arthroplasty components. No hardware complication. No fracture or dislocation identified. No osseous lesions. Soft tissues are normal.\n\n\n\n",
+    "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064283.371943.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064309.440264.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064464.747745.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064381.376918.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064340.957056.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801162400352.609856600.jpg']",
+    "images_found": [
+      {
+        "url_index": 0,
+        "filename": "1.2.840.113619.2.420.4.8323328.1754064283.371943.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064283.371943.1.jpg"
+      },
+      {
+        "url_index": 1,
+        "filename": "1.2.840.113619.2.420.4.8323328.1754064309.440264.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064309.440264.1.jpg"
+      },
+      {
+        "url_index": 2,
+        "filename": "1.2.840.113619.2.420.4.8323328.1754064464.747745.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064464.747745.1.jpg"
+      },
+      {
+        "url_index": 3,
+        "filename": "1.2.840.113619.2.420.4.8323328.1754064381.376918.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064381.376918.1.jpg"
+      },
+      {
+        "url_index": 4,
+        "filename": "1.2.840.113619.2.420.4.8323328.1754064340.957056.1.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.420.4.8323328.1754064340.957056.1.jpg"
+      },
+      {
+        "url_index": 5,
+        "filename": "1.2.250.1.439.5.78.20250801162400352.609856600.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801162400352.609856600.jpg"
+      }
+    ],
+    "images_not_found": []
+  },
+  {
+    "record_index": 602,
+    "gleamer_finding": "NEGATIVE",
+    "study_description": "XR HIP WITH PELVIS LEFT 3 VIEW",
+    "body_part_array": "[\n  \"PELVIS\",\n  \"HIP\"\n]",
+    "clinical_indication": "fall with pain \n\n",
+    "exam_technique": "Single frontal view the pelvis 2 views left hip performed\n\n\n\n",
+    "findings": "Pelvis is symmetric. Bilateral total hip arthroplasty with normal alignment of arthroplasty components. No hardware complication. No fracture or dislocation identified. No osseous lesions. Soft tissues are normal.\n\n\n\n",
+    "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801162810716.887495719.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112329689.4996.1709.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112341390.4884.1710.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112349179.4660.1712.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112354627.4547.1713.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112401666.4435.1714.jpg']",
+    "images_found": [
+      {
+        "url_index": 0,
+        "filename": "1.2.250.1.439.5.78.20250801162810716.887495719.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250801162810716.887495719.jpg"
+      },
+      {
+        "url_index": 1,
+        "filename": "1.2.410.200010.106.3.20250801112329689.4996.1709.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112329689.4996.1709.jpg"
+      },
+      {
+        "url_index": 2,
+        "filename": "1.2.410.200010.106.3.20250801112341390.4884.1710.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112341390.4884.1710.jpg"
+      },
+      {
+        "url_index": 3,
+        "filename": "1.2.410.200010.106.3.20250801112349179.4660.1712.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112349179.4660.1712.jpg"
+      },
+      {
+        "url_index": 4,
+        "filename": "1.2.410.200010.106.3.20250801112354627.4547.1713.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112354627.4547.1713.jpg"
+      },
+      {
+        "url_index": 5,
+        "filename": "1.2.410.200010.106.3.20250801112401666.4435.1714.jpg",
+        "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.106.3.20250801112401666.4435.1714.jpg"
+      }
+    ],
+    "images_not_found": []
+  }
+]

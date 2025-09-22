@@ -1,0 +1,12 @@
+Record 602 Summary
+==============================
+
+GLEAMER_FINDING: NEGATIVE
+STUDY_DESCRIPTION: XR HIP WITH PELVIS LEFT 3 VIEW
+BODY_PART_ARRAY: [
+  "PELVIS",
+  "HIP"
+]
+Images found: 6
+Images not found: 0
+Total URLs: 6

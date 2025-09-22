@@ -1,0 +1,48 @@
+{
+  "record_index": 56,
+  "gleamer_finding": "POSITIVE",
+  "study_description": "SHOULDER, COMPLETE (MIN 2 VWS)",
+  "body_part_array": "[\n  \"SHOULDER\",\n  \"CLAVICLE\",\n  \"RIB\"\n]",
+  "clinical_indication": "PAIN RIGHT SHOULDER\n\n",
+  "exam_technique": "3 radiographic views of the right shoulder were obtained.\n\n",
+  "findings": "There is acute comminuted displaced fracture of the right midclavicle.\n\nNo shoulder dislocation. No fractures of the glenohumeral joint.\n\n\n\n\n\n\n\n\n",
+  "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.1.41104.10.1.1756082715.10.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.1.41104.10.1.1756082715.11.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914339.13017637.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914340.446667555.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914339.1313611106.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914341.718923984.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.1.41104.10.1.1756082715.9.jpg']",
+  "images_found": [],
+  "images_not_found": [
+    {
+      "url_index": 0,
+      "filename": "1.2.410.200010.1.41104.10.1.1756082715.10.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.1.41104.10.1.1756082715.10.jpg"
+    },
+    {
+      "url_index": 1,
+      "filename": "1.2.410.200010.1.41104.10.1.1756082715.11.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.1.41104.10.1.1756082715.11.jpg"
+    },
+    {
+      "url_index": 2,
+      "filename": "1.2.250.1.439.5.78.20250825004914339.13017637.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914339.13017637.jpg"
+    },
+    {
+      "url_index": 3,
+      "filename": "1.2.250.1.439.5.78.20250825004914340.446667555.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914340.446667555.jpg"
+    },
+    {
+      "url_index": 4,
+      "filename": "1.2.250.1.439.5.78.20250825004914339.1313611106.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914339.1313611106.jpg"
+    },
+    {
+      "url_index": 5,
+      "filename": "1.2.250.1.439.5.78.20250825004914341.718923984.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825004914341.718923984.jpg"
+    },
+    {
+      "url_index": 6,
+      "filename": "1.2.410.200010.1.41104.10.1.1756082715.9.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.410.200010.1.41104.10.1.1756082715.9.jpg"
+    }
+  ]
+}

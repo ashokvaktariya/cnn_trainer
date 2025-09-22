@@ -1,0 +1,11 @@
+Record 400 Summary
+==============================
+
+GLEAMER_FINDING: NEGATIVE
+STUDY_DESCRIPTION: XRAY LUMBAR (L-SP) COMPLETE 5V
+BODY_PART_ARRAY: [
+  "LSPINE"
+]
+Images found: 0
+Images not found: 6
+Total URLs: 6

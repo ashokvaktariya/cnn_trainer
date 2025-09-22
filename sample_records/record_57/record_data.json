@@ -1,0 +1,38 @@
+{
+  "record_index": 57,
+  "gleamer_finding": "NEGATIVE",
+  "study_description": "HAND, COMPLETE (3VW MIN)",
+  "body_part_array": "[\n  \"HAND\"\n]",
+  "clinical_indication": "HAND PAIN\n\n",
+  "exam_technique": "4 views DI HAND, COMPLETE (3VW MIN)\n\n",
+  "findings": "Suboptimal lateral positioning of the index and middle digits, which appear buddy wrapped, limits assessment. No acute finding of the right hand.Normal alignment of joint spaces and physes. Index digit soft tissue swelling.\n\n",
+  "download_urls": "['https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756090984.732351.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756091080.160568.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756091026.487793.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756091008.169542.1.jpg', 'https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825030831537.1028783914.jpg']",
+  "images_found": [],
+  "images_not_found": [
+    {
+      "url_index": 0,
+      "filename": "1.2.840.113619.2.203.4.2147483647.1756090984.732351.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756090984.732351.1.jpg"
+    },
+    {
+      "url_index": 1,
+      "filename": "1.2.840.113619.2.203.4.2147483647.1756091080.160568.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756091080.160568.1.jpg"
+    },
+    {
+      "url_index": 2,
+      "filename": "1.2.840.113619.2.203.4.2147483647.1756091026.487793.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756091026.487793.1.jpg"
+    },
+    {
+      "url_index": 3,
+      "filename": "1.2.840.113619.2.203.4.2147483647.1756091008.169542.1.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.840.113619.2.203.4.2147483647.1756091008.169542.1.jpg"
+    },
+    {
+      "url_index": 4,
+      "filename": "1.2.250.1.439.5.78.20250825030831537.1028783914.jpg",
+      "url": "https://ciprodciviedicom01.blob.core.windows.net/gleamer-images/1.2.250.1.439.5.78.20250825030831537.1028783914.jpg"
+    }
+  ]
+}
