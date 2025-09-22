@@ -53,17 +53,21 @@ class SampleDatasetCreator:
             raise
     
     def find_valid_samples(self, df):
-        """Find samples with valid images"""
-        logger.info("🔍 Finding samples with valid images...")
+        """Find samples with valid images (random selection)"""
+        logger.info("🔍 Finding samples with valid images (random selection)...")
+        
+        # Shuffle the dataframe for random selection
+        df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)
+        logger.info(f"🎲 Shuffled dataset for random selection")
         
         valid_samples = []
         processed = 0
         
-        for idx, row in df.iterrows():
+        for idx, row in df_shuffled.iterrows():
             processed += 1
             
             if processed % 1000 == 0:
-                logger.info(f"   Processed {processed}/{len(df)} records...")
+                logger.info(f"   Processed {processed}/{len(df_shuffled)} records...")
             
             # Parse UIDs
             uid_string = str(row['SOP_INSTANCE_UID_ARRAY'])
@@ -97,7 +101,7 @@ class SampleDatasetCreator:
                 # If we found valid images, add this sample
                 if sample_images:
                     sample_data = {
-                        'row_index': idx,
+                        'row_index': row.name,  # Original row index from original dataframe
                         'gleamer_finding': row['GLEAMER_FINDING'],
                         'accession_number': row.get('ACCESSION_NUMBER', ''),
                         'study_description': row.get('STUDY_DESCRIPTION', ''),
@@ -117,7 +121,7 @@ class SampleDatasetCreator:
                 logger.warning(f"⚠️ Error processing row {idx}: {e}")
                 continue
         
-        logger.info(f"✅ Found {len(valid_samples)} valid samples")
+        logger.info(f"✅ Found {len(valid_samples)} valid samples (random selection)")
         return valid_samples
     
     def _find_image_file(self, uid):
