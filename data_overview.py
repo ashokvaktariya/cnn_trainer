@@ -25,7 +25,8 @@ class DataAnalyzer:
         
         self.csv_path = self.config['data']['csv_path']
         self.image_root = self.config['data']['image_root']
-        self.output_dir = self.config['data']['output_dir']
+        # Use local directory for data analysis output
+        self.output_dir = "./data_analysis_outputs/"
         
         # Create output directory
         os.makedirs(self.output_dir, exist_ok=True)
