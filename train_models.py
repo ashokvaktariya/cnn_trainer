@@ -194,7 +194,7 @@ class BinaryMedicalTrainer:
             'config': {
                 'model_name': self.model_name,
                 'training_config': config['training'],
-                'binary_config': BINARY_CONFIG
+                'binary_config': config['model']
             }
         }
         
@@ -304,11 +304,11 @@ class BinaryMedicalTrainer:
             scheduler = None
         
         # Setup loss function
-        if MODEL_CONFIGS['binary_classifier']['use_focal_loss']:
+        if config['model'].get('use_focal_loss', False):
             criterion = create_loss_function(
                 use_focal_loss=True,
-                alpha=MODEL_CONFIGS['binary_classifier']['focal_alpha'],
-                gamma=MODEL_CONFIGS['binary_classifier']['focal_gamma']
+                alpha=config['model'].get('focal_alpha', 0.25),
+                gamma=config['model'].get('focal_gamma', 2.0)
             )
         else:
             criterion = nn.CrossEntropyLoss()
@@ -452,7 +452,7 @@ def train_binary_classifier():
     results = trainer.train(train_loader, val_loader)
     
     # Check if target accuracy reached
-    target_accuracy = BINARY_CONFIG['target_accuracy'] * 100
+    target_accuracy = config['model'].get('target_accuracy', 0.85) * 100
     if results['best_accuracy'] >= target_accuracy:
         logger.info(f"🎯 Target accuracy {target_accuracy:.1f}% reached! ✅")
     else:
