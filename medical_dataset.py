@@ -227,11 +227,14 @@ class BinaryMedicalDataset(Dataset):
 def get_transforms(mode='train'):
     """Get data transforms for training/validation using PyTorch transforms"""
     
+    # Get image size from config
+    image_size = config['data']['image_size'][0]  # Use first dimension (600 for B7)
+    
     if mode == 'train':
         # Training transforms with augmentation
         transform = transforms.Compose([
-            transforms.Resize((256, 256)),
-            transforms.RandomCrop((224, 224)),
+            transforms.Resize((int(image_size * 1.1), int(image_size * 1.1))),  # Slightly larger for cropping
+            transforms.RandomCrop((image_size, image_size)),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomRotation(degrees=15),
             transforms.ColorJitter(brightness=0.2, contrast=0.2),
@@ -241,7 +244,7 @@ def get_transforms(mode='train'):
     else:
         # Validation/test transforms (no augmentation)
         transform = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalization
         ])
@@ -268,24 +271,31 @@ def custom_collate_fn(batch):
         'gleamer_finding': gleamer_findings
     }
 
-def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True):
+def create_data_loaders(csv_path=None, val_csv_path=None, batch_size=None, num_workers=None, balance_classes=True):
     """Create data loaders for training and validation"""
     
     batch_size = batch_size or config['training']['batch_size']
     num_workers = num_workers or config['hardware']['num_workers']
     
-    # Create datasets
+    # Use provided CSV paths or fall back to config
+    train_csv = csv_path or os.path.join(config['data']['output_dir'], 'train_dataset.csv')
+    val_csv = val_csv_path or os.path.join(config['data']['output_dir'], 'val_dataset.csv')
+    
+    # Create datasets with specific CSV files
     train_dataset = BinaryMedicalDataset(
+        csv_file=train_csv,
         transform=get_transforms('train'),
         mode='train'
     )
     
     val_dataset = BinaryMedicalDataset(
+        csv_file=val_csv,
         transform=get_transforms('val'),
         mode='val'
     )
     
     test_dataset = BinaryMedicalDataset(
+        csv_file=val_csv,  # Use validation CSV for test
         transform=get_transforms('val'),
         mode='test'
     )
