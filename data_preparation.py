@@ -99,28 +99,35 @@ class DataPreparator:
     
     def _find_image_file_by_filename(self, filename):
         """Find image file by exact filename in gleamer-images folder"""
-        # Server path: /mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/gleamer-images
-        gleamer_images_dir = os.path.join(self.image_root, "gleamer-images")
+        # Server path: /mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images
+        gleamer_images_dir = self.image_root  # Already points to gleamer-images
+        
+        logger.debug(f"Searching for {filename} in {gleamer_images_dir}")
         
         # Check main gleamer-images directory
         image_path = os.path.join(gleamer_images_dir, filename)
         if os.path.exists(image_path):
+            logger.debug(f"Found image at: {image_path}")
             return image_path
         
         # Check subdirectories in gleamer-images
         for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2', 'fracture', 'normal']:
             image_path = os.path.join(gleamer_images_dir, subdir, filename)
             if os.path.exists(image_path):
+                logger.debug(f"Found image at: {image_path}")
                 return image_path
         
         # Also check if filename exists in any subdirectory (recursive search)
         try:
             for root, dirs, files in os.walk(gleamer_images_dir):
                 if filename in files:
-                    return os.path.join(root, filename)
+                    found_path = os.path.join(root, filename)
+                    logger.debug(f"Found image at: {found_path}")
+                    return found_path
         except Exception as e:
             logger.warning(f"Error searching for {filename}: {e}")
         
+        logger.debug(f"Image not found: {filename}")
         return None
     
     def _is_valid_image(self, image_path):
@@ -153,7 +160,7 @@ class DataPreparator:
             logger.warning(f"⚠️ Error checking image {image_path}: {e}")
             return False
     
-    def filter_valid_images(self, sample_size=None):
+    def filter_valid_images(self, sample_size=None, debug_mode=False):
         """Filter data to keep only records with valid images"""
         logger.info("🖼️ Filtering valid images...")
         
@@ -166,6 +173,32 @@ class DataPreparator:
         valid_records = []
         total_processed = 0
         valid_images_found = 0
+        
+        # Debug: Check first few records
+        if debug_mode:
+            logger.info("🔍 DEBUG MODE: Checking first 3 records...")
+            for idx, row in data_to_process.head(3).iterrows():
+                download_urls_string = str(row['download_urls'])
+                logger.info(f"Record {idx}: {download_urls_string[:200]}...")
+                
+                try:
+                    import json
+                    import ast
+                    download_urls = ast.literal_eval(download_urls_string)
+                    logger.info(f"  Parsed URLs: {len(download_urls)}")
+                    for i, url in enumerate(download_urls[:2]):
+                        filename = url.split('/')[-1].strip()
+                        logger.info(f"  URL {i}: {url}")
+                        logger.info(f"  Filename {i}: {filename}")
+                        
+                        # Test image finding
+                        image_path = self._find_image_file_by_filename(filename)
+                        logger.info(f"  Image found: {image_path is not None}")
+                        if image_path:
+                            logger.info(f"  Image path: {image_path}")
+                except Exception as e:
+                    logger.error(f"  Error parsing record {idx}: {e}")
+            logger.info("🔍 DEBUG MODE: End of debug check")
         
         for idx, row in data_to_process.iterrows():
             total_processed += 1
@@ -663,8 +696,14 @@ def main():
     # Load data
     preparator.load_data()
     
-    # Filter valid images (full dataset processing)
-    preparator.filter_valid_images()  # Process full dataset
+    # Filter valid images with debug mode for first run
+    logger.info("🔍 Running with debug mode to check image paths...")
+    preparator.filter_valid_images(sample_size=100, debug_mode=True)  # Test with 100 records first
+    
+    # If no images found, try with full dataset
+    if preparator.clean_data is None or len(preparator.clean_data) == 0:
+        logger.warning("⚠️ No images found in sample. Trying full dataset...")
+        preparator.filter_valid_images()  # Process full dataset
     
     # Filter by confidence scores (if available)
     preparator.filter_confidence_scores()
