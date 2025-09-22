@@ -193,7 +193,7 @@ class BinaryMedicalTrainer:
             'val_aucs': self.val_aucs,
             'config': {
                 'model_name': self.model_name,
-                'training_config': TRAINING_CONFIG,
+                'training_config': config['training'],
                 'binary_config': BINARY_CONFIG
             }
         }
@@ -277,8 +277,8 @@ class BinaryMedicalTrainer:
     
     def train(self, train_loader, val_loader, num_epochs=None, learning_rate=None):
         """Complete training pipeline"""
-        num_epochs = num_epochs or TRAINING_CONFIG['num_epochs']
-        learning_rate = learning_rate or TRAINING_CONFIG['learning_rate']
+        num_epochs = num_epochs or config['training']['num_epochs']
+        learning_rate = learning_rate or config['training']['learning_rate']
         
         logger.info(f"🚀 Starting training for {num_epochs} epochs")
         logger.info(f"📊 Training samples: {len(train_loader.dataset)}")
@@ -288,15 +288,15 @@ class BinaryMedicalTrainer:
         optimizer = optim.AdamW(
             self.model.parameters(),
             lr=learning_rate,
-            weight_decay=TRAINING_CONFIG['weight_decay']
+            weight_decay=config['training']['weight_decay']
         )
         
         # Setup scheduler
-        if TRAINING_CONFIG['scheduler'] == 'cosine':
+        if config['training']['scheduler'] == 'cosine':
             scheduler = optim.lr_scheduler.CosineAnnealingLR(
                 optimizer, T_max=num_epochs
             )
-        elif TRAINING_CONFIG['scheduler'] == 'step':
+        elif config['training']['scheduler'] == 'step':
             scheduler = optim.lr_scheduler.StepLR(
                 optimizer, step_size=num_epochs//3, gamma=0.1
             )
@@ -314,8 +314,8 @@ class BinaryMedicalTrainer:
             criterion = nn.CrossEntropyLoss()
         
         # Early stopping
-        patience = TRAINING_CONFIG['patience']
-        min_delta = TRAINING_CONFIG['min_delta']
+        patience = config['training']['patience']
+        min_delta = config['training']['min_delta']
         best_epoch = 0
         patience_counter = 0
         
@@ -346,7 +346,7 @@ class BinaryMedicalTrainer:
                 patience_counter += 1
             
             # Save checkpoint
-            if is_best or (epoch + 1) % TRAINING_CONFIG['save_every_n_epochs'] == 0:
+            if is_best or (epoch + 1) % config['training']['save_every_n_epochs'] == 0:
                 self.save_checkpoint(epoch, optimizer, scheduler, is_best=is_best)
             
             # Log epoch time
