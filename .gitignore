@@ -172,3 +172,6 @@ third_party/
 external/
 vendor/
 dependencies/
+
+# Test directory - exclude from git
+test/
