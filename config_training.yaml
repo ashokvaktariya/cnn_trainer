@@ -13,36 +13,36 @@ data:
   test_split: 0.15
   
   # Image preprocessing
-  image_size: [224, 224]
+  image_size: [300, 300]  # EfficientNet-B3 optimal size
   channels: 3
   normalize: true
   augmentation: true
 
 # Model Configuration
 model:
-  architecture: "efficientnet_b0"
+  architecture: "efficientnet_b3"  # Best for medical imaging - optimal accuracy/speed
   num_classes: 2
   pretrained: true
-  dropout: 0.2
+  dropout: 0.3
   
   # Class labels
   class_names: ["NEGATIVE", "POSITIVE"]
-  class_weights: [1.0, 1.0]  # Adjust if imbalanced
+  class_weights: [1.0, 2.0]  # Weighted for imbalanced medical data
 
 # Training Configuration
 training:
-  batch_size: 32
-  num_epochs: 50
-  learning_rate: 0.001
+  batch_size: 16  # Reduced for B3 model
+  num_epochs: 100
+  learning_rate: 0.0005  # Lower LR for B3
   weight_decay: 1e-4
   
   # Optimizer
   optimizer: "adamw"
   scheduler: "cosine"
-  warmup_epochs: 5
+  warmup_epochs: 10
   
   # Early stopping
-  patience: 10
+  patience: 15
   min_delta: 0.001
   
   # Mixed precision

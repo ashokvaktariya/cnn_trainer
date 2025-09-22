@@ -420,7 +420,7 @@ def train_binary_classifier():
     # Create model
     model_config = config['model']
     model = create_model(
-        model_type="BinaryEfficientNet",  # Use EfficientNet
+        model_type="efficientnet_b3",  # Use EfficientNet-B3
         num_classes=model_config['num_classes'],
         dropout_rate=model_config['dropout'],
         pretrained=model_config['pretrained']
@@ -429,11 +429,13 @@ def train_binary_classifier():
     # Print model summary
     get_model_summary(model)
     
-    # Create data loaders
+    # Create data loaders using new dataset paths
     train_loader, val_loader, test_loader = create_data_loaders(
+        csv_path=os.path.join(config['data']['output_dir'], 'train_dataset.csv'),
+        val_csv_path=os.path.join(config['data']['output_dir'], 'val_dataset.csv'),
         batch_size=config['training']['batch_size'],
         num_workers=config['hardware']['num_workers'],
-        balance_classes=True  # Always balance for medical data
+        balance_classes=False  # Use all data as provided
     )
     
     # Print dataset statistics
