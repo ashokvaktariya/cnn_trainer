@@ -420,7 +420,7 @@ def train_binary_classifier():
     # Create model
     model_config = config['model']
     model = create_model(
-        model_type="efficientnet_b3",  # Use EfficientNet-B3
+        model_type="efficientnet_b7",  # Use EfficientNet-B7
         num_classes=model_config['num_classes'],
         dropout_rate=model_config['dropout'],
         pretrained=model_config['pretrained']

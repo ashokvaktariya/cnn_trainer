@@ -13,17 +13,17 @@ data:
   test_split: 0.15
   
   # Image preprocessing
-  image_size: [300, 300]  # EfficientNet-B3 optimal size
+  image_size: [600, 600]  # EfficientNet-B7 optimal size
   channels: 3
   normalize: true
   augmentation: true
 
 # Model Configuration
 model:
-  architecture: "efficientnet_b3"  # Best for medical imaging - optimal accuracy/speed
+  architecture: "efficientnet_b7"  # Maximum accuracy for medical imaging
   num_classes: 2
   pretrained: true
-  dropout: 0.3
+  dropout: 0.4
   
   # Class labels
   class_names: ["NEGATIVE", "POSITIVE"]
@@ -31,18 +31,18 @@ model:
 
 # Training Configuration
 training:
-  batch_size: 16  # Reduced for B3 model
-  num_epochs: 100
-  learning_rate: 0.0005  # Lower LR for B3
+  batch_size: 8  # Reduced for B7 model (larger)
+  num_epochs: 150
+  learning_rate: 0.0003  # Lower LR for B7
   weight_decay: 1e-4
   
   # Optimizer
   optimizer: "adamw"
   scheduler: "cosine"
-  warmup_epochs: 10
+  warmup_epochs: 15
   
   # Early stopping
-  patience: 15
+  patience: 20
   min_delta: 0.001
   
   # Mixed precision
