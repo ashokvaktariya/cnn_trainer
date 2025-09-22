@@ -53,49 +53,76 @@ class SampleDatasetCreator:
             raise
     
     def find_valid_samples(self, df):
-        """Find samples with valid images (random selection)"""
-        logger.info("🔍 Finding samples with valid images (random selection)...")
+        """Find samples with valid images (stratified sampling for balanced dataset)"""
+        logger.info("🔍 Finding samples with valid images (stratified sampling)...")
         
-        # Shuffle the dataframe for random selection
-        df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)
-        logger.info(f"🎲 Shuffled dataset for random selection")
+        # Filter out DOUBT cases
+        df_filtered = df[df['GLEAMER_FINDING'] != 'DOUBT']
+        logger.info(f"🚫 Filtered DOUBT cases: {len(df)} → {len(df_filtered)}")
+        
+        # Get POSITIVE and NEGATIVE samples
+        pos_samples = df_filtered[df_filtered['GLEAMER_FINDING'] == 'POSITIVE']
+        neg_samples = df_filtered[df_filtered['GLEAMER_FINDING'] == 'NEGATIVE']
+        
+        logger.info(f"📊 Available samples:")
+        logger.info(f"   POSITIVE: {len(pos_samples)}")
+        logger.info(f"   NEGATIVE: {len(neg_samples)}")
+        
+        # Calculate how many samples to take from each class
+        samples_per_class = self.num_samples // 2
+        logger.info(f"🎯 Target: {samples_per_class} samples per class")
+        
+        # Sample from each class
+        pos_sample = pos_samples.sample(n=min(samples_per_class, len(pos_samples)), random_state=42)
+        neg_sample = neg_samples.sample(n=min(samples_per_class, len(neg_samples)), random_state=42)
+        
+        # Combine samples
+        balanced_df = pd.concat([pos_sample, neg_sample]).reset_index(drop=True)
+        logger.info(f"🎲 Created balanced sample: {len(balanced_df)} samples")
         
         valid_samples = []
         processed = 0
         
-        for idx, row in df_shuffled.iterrows():
+        for idx, row in balanced_df.iterrows():
             processed += 1
             
-            if processed % 1000 == 0:
-                logger.info(f"   Processed {processed}/{len(df_shuffled)} records...")
+            logger.info(f"   Processing sample {processed}/{len(balanced_df)}: {row['GLEAMER_FINDING']}")
             
-            # Parse UIDs
-            uid_string = str(row['SOP_INSTANCE_UID_ARRAY'])
+            # Parse download URLs to get image filenames
+            download_urls_string = str(row['download_urls'])
             try:
                 import json
                 # Try to parse as JSON array first
                 try:
-                    uids = json.loads(uid_string)
-                    if not isinstance(uids, list):
-                        uids = [uids]
+                    download_urls = json.loads(download_urls_string)
+                    if not isinstance(download_urls, list):
+                        download_urls = [download_urls]
                 except json.JSONDecodeError:
                     # Fallback to comma-separated parsing
-                    if ',' in uid_string:
-                        uids = [uid.strip().strip('"\'[]') for uid in uid_string.split(',')]
+                    if ',' in download_urls_string:
+                        download_urls = [url.strip().strip('"\'[]') for url in download_urls_string.split(',')]
                     else:
-                        uids = [uid_string.strip().strip('"\'[]')]
+                        download_urls = [download_urls_string.strip().strip('"\'[]')]
+                
+                # Extract filenames from URLs
+                image_filenames = []
+                for url in download_urls:
+                    if url and url != 'nan':
+                        # Extract filename from URL
+                        filename = os.path.basename(url.strip())
+                        if filename:
+                            image_filenames.append(filename)
                 
                 # Find valid images for this sample
                 sample_images = []
-                for uid in uids:
-                    if uid and uid != 'nan':
-                        uid = uid.strip()
-                        image_path = self._find_image_file(uid)
+                for filename in image_filenames:
+                    if filename:
+                        image_path = self._find_image_file_by_filename(filename)
                         if image_path and self._is_valid_image(image_path):
                             sample_images.append({
-                                'uid': uid,
+                                'filename': filename,
                                 'image_path': image_path,
-                                'filename': os.path.basename(image_path)
+                                'uid': filename.split('.')[0]  # Extract UID from filename
                             })
                 
                 # If we found valid images, add this sample
@@ -112,16 +139,15 @@ class SampleDatasetCreator:
                         'images': sample_images
                     }
                     valid_samples.append(sample_data)
-                    
-                    # Stop when we have enough samples
-                    if len(valid_samples) >= self.num_samples:
-                        break
+                    logger.info(f"   ✅ Added {row['GLEAMER_FINDING']} sample with {len(sample_images)} images")
+                else:
+                    logger.warning(f"   ⚠️ No valid images found for {row['GLEAMER_FINDING']} sample")
                         
             except Exception as e:
                 logger.warning(f"⚠️ Error processing row {idx}: {e}")
                 continue
         
-        logger.info(f"✅ Found {len(valid_samples)} valid samples (random selection)")
+        logger.info(f"✅ Found {len(valid_samples)} valid samples (stratified sampling)")
         return valid_samples
     
     def _find_image_file(self, uid):
@@ -139,6 +165,21 @@ class SampleDatasetCreator:
                 image_path = os.path.join(self.image_root, subdir, f"{uid}{ext}")
                 if os.path.exists(image_path):
                     return image_path
+        
+        return None
+    
+    def _find_image_file_by_filename(self, filename):
+        """Find image file by exact filename"""
+        # Check main directory
+        image_path = os.path.join(self.image_root, filename)
+        if os.path.exists(image_path):
+            return image_path
+        
+        # Check subdirectories
+        for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2', 'fracture', 'normal']:
+            image_path = os.path.join(self.image_root, subdir, filename)
+            if os.path.exists(image_path):
+                return image_path
         
         return None
     
