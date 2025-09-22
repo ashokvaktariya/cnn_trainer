@@ -218,7 +218,7 @@ def main():
     
     # Default paths (update these for your setup)
     csv_path = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/processed_dicom_image_url_file.csv"  # Server CSV
-    image_root = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/gleamer-images"  # Server gleamer-images folder
+    image_root = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images"  # Server gleamer-images folder
     output_dir = "sample_records"
     
     # Check if CSV exists
