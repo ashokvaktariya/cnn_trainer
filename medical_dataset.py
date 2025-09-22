@@ -220,7 +220,7 @@ class BinaryMedicalDataset(Dataset):
         return {
             'image': image,
             'label': torch.tensor(label, dtype=torch.long),
-            'uid': uids[0] if uids else '',
+            'uid': image_filenames[0] if image_filenames else '',
             'gleamer_finding': row['GLEAMER_FINDING']
         }
 
