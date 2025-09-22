@@ -9,6 +9,7 @@ except ImportError:
 import numpy as np
 import os
 import time
+import yaml
 from tqdm import tqdm
 import json
 import logging
@@ -18,10 +19,10 @@ import seaborn as sns
 
 from medical_dataset import create_data_loaders, get_dataset_stats
 from models import create_model, create_loss_function, get_model_summary
-from config import (
-    TRAINING_CONFIG, GPU_CONFIG, CHECKPOINTS_DIR, RESULTS_DIR, LOGS_DIR,
-    MODEL_CONFIGS, BINARY_CONFIG
-)
+
+# Load YAML configuration
+with open('config_training.yaml', 'r') as f:
+    config = yaml.safe_load(f)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +35,7 @@ class BinaryMedicalTrainer:
         self.model = model.to(device)
         self.device = device
         self.model_name = model_name
-        self.save_dir = save_dir or CHECKPOINTS_DIR
+        self.save_dir = save_dir or os.path.join(config['data']['output_dir'], 'checkpoints')
         self.best_accuracy = 0.0
         self.train_losses = []
         self.val_losses = []
@@ -42,7 +43,7 @@ class BinaryMedicalTrainer:
         self.val_aucs = []
         
         # Mixed precision training
-        self.scaler = GradScaler() if GPU_CONFIG['mixed_precision'] else None
+        self.scaler = GradScaler() if config['hardware']['mixed_precision'] else None
         
         # Create save directory
         os.makedirs(self.save_dir, exist_ok=True)
@@ -75,9 +76,9 @@ class BinaryMedicalTrainer:
                 self.scaler.scale(loss).backward()
                 
                 # Gradient clipping
-                if TRAINING_CONFIG.get('gradient_clipping'):
+                if config['training'].get('gradient_clipping'):
                     self.scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), TRAINING_CONFIG['gradient_clipping'])
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), config['training']['gradient_clipping'])
                 
                 self.scaler.step(optimizer)
                 self.scaler.update()
@@ -88,8 +89,8 @@ class BinaryMedicalTrainer:
                 loss.backward()
                 
                 # Gradient clipping
-                if TRAINING_CONFIG.get('gradient_clipping'):
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), TRAINING_CONFIG['gradient_clipping'])
+                if config['training'].get('gradient_clipping'):
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), config['training']['gradient_clipping'])
                 
                 optimizer.step()
             
@@ -413,15 +414,15 @@ def train_binary_classifier():
     logger.info("🚀 Starting Binary Medical Image Classification Training")
     
     # Setup device
-    device = torch.device(GPU_CONFIG['device'])
+    device = torch.device(config['hardware']['device'])
     logger.info(f"📱 Using device: {device}")
     
     # Create model
-    model_config = MODEL_CONFIGS['binary_classifier']
+    model_config = config['model']
     model = create_model(
-        model_type=model_config['model_type'],
+        model_type="BinaryEfficientNet",  # Use EfficientNet
         num_classes=model_config['num_classes'],
-        dropout_rate=model_config['dropout_rate'],
+        dropout_rate=model_config['dropout'],
         pretrained=model_config['pretrained']
     )
     
@@ -430,9 +431,9 @@ def train_binary_classifier():
     
     # Create data loaders
     train_loader, val_loader, test_loader = create_data_loaders(
-        batch_size=TRAINING_CONFIG['batch_size'],
-        num_workers=TRAINING_CONFIG['num_workers'],
-        balance_classes=TRAINING_CONFIG['balance_classes']
+        batch_size=config['training']['batch_size'],
+        num_workers=config['hardware']['num_workers'],
+        balance_classes=True  # Always balance for medical data
     )
     
     # Print dataset statistics

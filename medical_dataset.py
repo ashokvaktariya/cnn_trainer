@@ -10,21 +10,21 @@ import logging
 from pathlib import Path
 # Use PyTorch/torchvision transforms instead of MONAI
 import torchvision.transforms as transforms
-from config import (
-    CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, 
-    TRAINING_CONFIG, PREPROCESSING_CONFIG, 
-    LOGGING_CONFIG, BINARY_CONFIG
-)
+import yaml
+
+# Load YAML configuration
+with open('config_training.yaml', 'r') as f:
+    config = yaml.safe_load(f)
 
 class BinaryMedicalDataset(Dataset):
     """Binary Classification Dataset for Medical Image Fracture Detection"""
     
     def __init__(self, csv_file=None, transform=None, mode='train', use_valid_images_only=True):
         # Use config defaults if not provided
-        csv_file = csv_file or CSV_FILE
+        csv_file = csv_file or config['data']['csv_path']
         
         # Setup logging first
-        logging.basicConfig(level=getattr(logging, LOGGING_CONFIG['log_level']))
+        logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
         self.data = pd.read_csv(csv_file)
@@ -45,9 +45,8 @@ class BinaryMedicalDataset(Dataset):
         original_count = len(self.data)
         
         # Exclude DOUBT cases if configured
-        if TRAINING_CONFIG.get('exclude_doubt_cases', True):
-            self.data = self.data[self.data['GLEAMER_FINDING'] != 'DOUBT']
-            self.logger.info(f"🚫 Excluded DOUBT cases: {original_count} → {len(self.data)}")
+        self.data = self.data[self.data['GLEAMER_FINDING'] != 'DOUBT']
+        self.logger.info(f"🚫 Excluded DOUBT cases: {original_count} → {len(self.data)}")
         
         # Filter valid images only if configured
         if self.use_valid_images_only:
@@ -56,15 +55,16 @@ class BinaryMedicalDataset(Dataset):
         
         # Map labels to binary classification
         self.data = self.data[self.data['GLEAMER_FINDING'].isin(['POSITIVE', 'NEGATIVE'])]
-        self.data['label'] = self.data['GLEAMER_FINDING'].map(BINARY_CONFIG['label_mapping'])
+        label_mapping = {"NEGATIVE": 0, "POSITIVE": 1}
+        self.data['label'] = self.data['GLEAMER_FINDING'].map(label_mapping)
         
         self.logger.info(f"🏷️ Binary labels: POSITIVE={sum(self.data['label']==1)}, NEGATIVE={sum(self.data['label']==0)}")
     
     def _split_data(self):
         """Split data into train/val/test sets"""
         total_len = len(self.data)
-        train_end = int((1 - TRAINING_CONFIG['val_split'] - TRAINING_CONFIG['test_split']) * total_len)
-        val_end = int((1 - TRAINING_CONFIG['test_split']) * total_len)
+        train_end = int((1 - config['data']['val_split'] - config['data']['test_split']) * total_len)
+        val_end = int((1 - config['data']['test_split']) * total_len)
         
         if self.mode == 'train':
             self.data = self.data.iloc[:train_end]
@@ -239,8 +239,8 @@ def custom_collate_fn(batch):
 def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True):
     """Create data loaders for training and validation"""
     
-    batch_size = batch_size or TRAINING_CONFIG['batch_size']
-    num_workers = num_workers or TRAINING_CONFIG['num_workers']
+    batch_size = batch_size or config['training']['batch_size']
+    num_workers = num_workers or config['hardware']['num_workers']
     
     # Create datasets
     train_dataset = BinaryMedicalDataset(
@@ -260,7 +260,7 @@ def create_data_loaders(batch_size=None, num_workers=None, balance_classes=True)
     
     # Create samplers for class balancing
     train_sampler = None
-    if balance_classes and TRAINING_CONFIG.get('balance_classes', True):
+    if balance_classes:
         # Calculate class weights
         class_counts = train_dataset.data['label'].value_counts().sort_index()
         class_weights = 1.0 / class_counts.values

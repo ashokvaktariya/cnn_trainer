@@ -70,7 +70,7 @@ logging:
   wandb_entity: "collaborative-imaging"
   
   # Local logging
-  log_dir: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/logs/"
+  log_dir: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/training_outputs/logs/"
   save_predictions: true
   save_confusion_matrix: true
 
@@ -86,7 +86,7 @@ evaluation:
 
 # Inference Configuration
 inference:
-  model_path: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/best_model.pth"
+  model_path: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/training_outputs/best_model.pth"
   batch_size: 16
   confidence_threshold: 0.5
   

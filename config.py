@@ -11,7 +11,7 @@ from pathlib import Path
 # SERVER PATHS CONFIGURATION
 # =============================================================================
 
-# Server data paths - assume we're running on server
+# Server data paths - H100 GPU Server
 SERVER_DATA_ROOT = "/sharedata01/CNN_data"
 GLEAMER_DATA_ROOT = "/sharedata01/CNN_data/gleamer/gleamer"
 
