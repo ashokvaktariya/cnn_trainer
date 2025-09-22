@@ -181,7 +181,7 @@ class BinaryDenseNet(nn.Module):
 def create_model(model_type="BinaryEfficientNet", num_classes=2, **kwargs):
     """Factory function to create models"""
     
-    if model_type == "BinaryEfficientNet":
+    if model_type == "BinaryEfficientNet" or model_type == "efficientnet_b7":
         return BinaryEfficientNet(num_classes=num_classes, **kwargs)
     elif model_type == "BinaryDenseNet":
         return BinaryDenseNet(num_classes=num_classes, **kwargs)
@@ -200,7 +200,7 @@ def create_loss_function(use_focal_loss=True, **kwargs):
 # UTILITY FUNCTIONS
 # =============================================================================
 
-def get_model_summary(model, input_size=(1, 3, 224, 224)):
+def get_model_summary(model, input_size=(1, 3, 600, 600)):
     """Get model summary"""
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -209,6 +209,7 @@ def get_model_summary(model, input_size=(1, 3, 224, 224)):
     print(f"   Total Parameters: {total_params:,}")
     print(f"   Trainable Parameters: {trainable_params:,}")
     print(f"   Model Size: {total_params * 4 / 1024 / 1024:.2f} MB")
+    print(f"   Input Size: {input_size}")
     
     return {
         'total_params': total_params,
