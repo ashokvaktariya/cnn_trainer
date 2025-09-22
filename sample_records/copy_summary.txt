@@ -1,8 +1,0 @@
-Sample Records Copy Summary
-========================================
-
-🔍 FILTERED FOR POSITIVE RECORDS ONLY
-----------------------------------------
-Records processed: 3
-Total images found: 0
-Total images not found: 0

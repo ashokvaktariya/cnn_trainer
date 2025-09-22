@@ -59,14 +59,14 @@ class SampleRecordCopier:
             
             # Copy CSV data
             record_data = {
-                'record_index': record_idx,
-                'gleamer_finding': row.get('GLEAMER_FINDING', 'UNKNOWN'),
-                'study_description': row.get('STUDY_DESCRIPTION', ''),
-                'body_part_array': row.get('BODY_PART_ARRAY', ''),
-                'clinical_indication': row.get('clinical_indication', ''),
-                'exam_technique': row.get('exam_technique', ''),
-                'findings': row.get('findings', ''),
-                'download_urls': row.get('download_urls', ''),
+                'record_index': int(record_idx),  # Convert to int for JSON serialization
+                'gleamer_finding': str(row.get('GLEAMER_FINDING', 'UNKNOWN')),
+                'study_description': str(row.get('STUDY_DESCRIPTION', '')),
+                'body_part_array': str(row.get('BODY_PART_ARRAY', '')),
+                'clinical_indication': str(row.get('clinical_indication', '')),
+                'exam_technique': str(row.get('exam_technique', '')),
+                'findings': str(row.get('findings', '')),
+                'download_urls': str(row.get('download_urls', '')),
                 'images_found': [],
                 'images_not_found': []
             }
@@ -212,7 +212,14 @@ class SampleRecordCopier:
             f.write(f"Records processed: {records_processed}\n")
             f.write(f"Total images found: {total_images_found}\n")
             f.write(f"Total images not found: {total_images_not_found}\n")
-            f.write(f"Success rate: {(total_images_found/(total_images_found+total_images_not_found)*100):.1f}%\n\n")
+            
+            # Calculate success rate safely
+            total_images = total_images_found + total_images_not_found
+            if total_images > 0:
+                success_rate = (total_images_found / total_images) * 100
+                f.write(f"Success rate: {success_rate:.1f}%\n\n")
+            else:
+                f.write(f"Success rate: N/A (no images processed)\n\n")
             
             f.write("Record Details:\n")
             f.write("-" * 20 + "\n")
