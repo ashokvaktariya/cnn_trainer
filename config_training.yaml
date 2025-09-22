@@ -34,7 +34,7 @@ training:
   batch_size: 8  # Reduced for B7 model (larger)
   num_epochs: 150
   learning_rate: 0.0003  # Lower LR for B7
-  weight_decay: 1e-4
+  weight_decay: 0.0001
   
   # Optimizer
   optimizer: "adamw"

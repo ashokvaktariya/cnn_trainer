@@ -287,8 +287,8 @@ class BinaryMedicalTrainer:
         # Setup optimizer
         optimizer = optim.AdamW(
             self.model.parameters(),
-            lr=learning_rate,
-            weight_decay=config['training']['weight_decay']
+            lr=float(learning_rate),
+            weight_decay=float(config['training']['weight_decay'])
         )
         
         # Setup scheduler
@@ -314,8 +314,8 @@ class BinaryMedicalTrainer:
             criterion = nn.CrossEntropyLoss()
         
         # Early stopping
-        patience = config['training']['patience']
-        min_delta = config['training']['min_delta']
+        patience = int(config['training']['patience'])
+        min_delta = float(config['training']['min_delta'])
         best_epoch = 0
         patience_counter = 0
         
