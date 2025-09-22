@@ -1,0 +1,96 @@
+# Training Configuration for H100 GPU Server
+# Medical Fracture Detection Binary Classification
+
+# Data Configuration
+data:
+  csv_path: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/processed_dicom_image_url_file.csv"
+  image_root: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"
+  output_dir: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/training_outputs/"
+  
+  # Data splits
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+  
+  # Image preprocessing
+  image_size: [224, 224]
+  channels: 3
+  normalize: true
+  augmentation: true
+
+# Model Configuration
+model:
+  architecture: "efficientnet_b0"
+  num_classes: 2
+  pretrained: true
+  dropout: 0.2
+  
+  # Class labels
+  class_names: ["NEGATIVE", "POSITIVE"]
+  class_weights: [1.0, 1.0]  # Adjust if imbalanced
+
+# Training Configuration
+training:
+  batch_size: 32
+  num_epochs: 50
+  learning_rate: 0.001
+  weight_decay: 1e-4
+  
+  # Optimizer
+  optimizer: "adamw"
+  scheduler: "cosine"
+  warmup_epochs: 5
+  
+  # Early stopping
+  patience: 10
+  min_delta: 0.001
+  
+  # Mixed precision
+  use_amp: true
+  
+  # Checkpointing
+  save_best: true
+  save_frequency: 5
+
+# Hardware Configuration
+hardware:
+  device: "cuda"
+  num_workers: 8
+  pin_memory: true
+  mixed_precision: true
+  
+  # H100 specific optimizations
+  compile_model: true
+  use_torch_compile: true
+
+# Logging Configuration
+logging:
+  use_wandb: true
+  wandb_project: "medical-fracture-detection"
+  wandb_entity: "collaborative-imaging"
+  
+  # Local logging
+  log_dir: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/logs/"
+  save_predictions: true
+  save_confusion_matrix: true
+
+# Evaluation Configuration
+evaluation:
+  metrics: ["accuracy", "precision", "recall", "f1", "auc"]
+  save_predictions: true
+  generate_report: true
+  
+  # Threshold optimization
+  optimize_threshold: true
+  threshold_range: [0.1, 0.9]
+
+# Inference Configuration
+inference:
+  model_path: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/best_model.pth"
+  batch_size: 16
+  confidence_threshold: 0.5
+  
+  # API settings
+  api_host: "0.0.0.0"
+  api_port: 8000
+  api_workers: 1
