@@ -1,26 +1,29 @@
 === SAMPLE DATA ===
 Row Index: 8
 GLEAMER Finding: NEGATIVE
-Accession Number: 2.03E+11
-Study Description: nan
+Accession Number: 2218992.003DVG
+Study Description: R ANKLE COMPLETE
 Body Part: [
-  "KNEE"
+  "ANKLE"
 ]
-Clinical Indication: R/O Fracture
+Clinical Indication: PAIN
+
+
+Exam Technique: XY R ANKLE 3 VIEW, XY L ANKLE 3 VIEW
+
+ 
+
+
+Findings: There is no evidence of acute fracture or dislocation.
+
+Bilateral calcaneal spurring
+
+The alignment is anatomical.
+
+There is no radiopaque foreign body.
 
 
 
-Exam Technique: 3 radiographic views of the left knee were obtained.
-
-
-
-Findings: Normal bony alignment
-
-No fracture or dislocation.
-
-No joint effusion
-
-No radiopaque foreign bodies
 
 
 
@@ -30,7 +33,7 @@ No radiopaque foreign bodies
 Number of Images: 4
 
 === IMAGES ===
-Image 1: 1.3.6.1.4.1.19179.1.11402367515788213.3.5309.27761.jpg (UID: 1.3.6.1.4.1.19179.1.11402367515788213.3.5309.27761)
-Image 2: 1.3.6.1.4.1.19179.1.11402367515788213.3.5387.27762.jpg (UID: 1.3.6.1.4.1.19179.1.11402367515788213.3.5387.27762)
-Image 3: 1.3.6.1.4.1.19179.1.11402367515788213.3.5573.27763.jpg (UID: 1.3.6.1.4.1.19179.1.11402367515788213.3.5573.27763)
-Image 4: 1.2.250.1.439.5.78.20250804231655361.954899344.jpg (UID: 1.2.250.1.439.5.78.20250804231655361.954899344)
+Image 1: 1.2.840.113619.2.305.4.2147483647.1755697904.399820.jpg (UID: 1)
+Image 2: 1.2.840.113619.2.305.4.2147483647.1755697828.734654.jpg (UID: 1)
+Image 3: 1.2.840.113619.2.305.4.2147483647.1755697880.646808.jpg (UID: 1)
+Image 4: 1.2.250.1.439.5.78.20250820161548236.1003385530.jpg (UID: 1)

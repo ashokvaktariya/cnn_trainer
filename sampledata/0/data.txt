@@ -1,24 +1,32 @@
 === SAMPLE DATA ===
 Row Index: 0
-GLEAMER Finding: NEGATIVE
-Accession Number: 2218094.001DVG
-Study Description: R KNEE 3V XRAY
+GLEAMER Finding: POSITIVE
+Accession Number: 2.03E+12
+Study Description: XR HAND 3+ VIEWS RIGHT
 Body Part: [
-  "KNEE"
+  "HAND_OTHER",
+  "WRIST",
+  "HAND_FRONT",
+  "HAND"
 ]
-Clinical Indication: PAIN
-
-TECHNICAL DATA: Frontal , oblique and lateral views were obtained of the   right knee.
+Clinical Indication: MVC, pain
 
 
-Exam Technique: nan
-Findings: Post surgical changes from repair of a patella fracture. Medial, lateral and patellofemoral compartment joint spaces are maintained.  Alignment is anatomic. Soft tissues are within normal limits. No joint effusion is demonstrated.  
+Exam Technique: AP and lateral views of the right forearm are obtained. AP, lateral, and oblique views of the right hand are obtained.
 
 
-Number of Images: 4
+Findings: Right forearm: The alignment is normal.  No evidence of fracture.
+
+Right hand: There is a linear lucency overlying the distal radius and scaphoid bone. No evidence of dislocation.
+
+
+Number of Images: 7
 
 === IMAGES ===
-Image 1: 1.2.840.113619.2.418.4.8323328.1755551357.136723.jpg (UID: 1.2.840.113619.2.418.4.8323328.1755551357.136723)
-Image 2: 1.2.840.113619.2.418.4.8323328.1755551420.469242.jpg (UID: 1.2.840.113619.2.418.4.8323328.1755551420.469242)
-Image 3: 1.2.840.113619.2.418.4.8323328.1755551539.455766.jpg (UID: 1.2.840.113619.2.418.4.8323328.1755551539.455766)
-Image 4: 1.2.250.1.439.5.78.20250818212955602.933685554.jpg (UID: 1.2.250.1.439.5.78.20250818212955602.933685554)
+Image 1: 1.2.392.200036.9107.307.28379.20250809.164644.1055172.jpg (UID: 1)
+Image 2: 1.2.392.200036.9107.307.28379.20250809.164643.1055171.jpg (UID: 1)
+Image 3: 1.2.392.200036.9107.307.28379.20250809.164630.1055170.jpg (UID: 1)
+Image 4: 1.2.250.1.439.5.78.20250809225121203.951493753.jpg (UID: 1)
+Image 5: 1.2.250.1.439.5.78.20250809225121204.1618682733.jpg (UID: 1)
+Image 6: 1.2.250.1.439.5.78.20250809225121203.2107183647.jpg (UID: 1)
+Image 7: 1.2.250.1.439.5.78.20250809225121204.2004081286.jpg (UID: 1)

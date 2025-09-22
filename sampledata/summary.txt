@@ -1,60 +1,56 @@
 === SAMPLE DATASET SUMMARY ===
-Total Samples: 10
+Total Samples: 9
 Source CSV: /mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/processed_dicom_image_url_file.csv
 Image Root: /mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/
-Created: 2025-09-22 10:53:46.912811
+Created: 2025-09-22 12:01:26.960463
 
 === LABEL DISTRIBUTION ===
-NEGATIVE: 10 samples
+POSITIVE: 5 samples
+NEGATIVE: 4 samples
 
 === SAMPLE DETAILS ===
 
 Sample 1 (Row 0):
-  Label: NEGATIVE
-  Images: 4
+  Label: POSITIVE
+  Images: 7
   Folder: 0/
 
 Sample 2 (Row 1):
-  Label: NEGATIVE
-  Images: 4
+  Label: POSITIVE
+  Images: 8
   Folder: 1/
 
 Sample 3 (Row 2):
-  Label: NEGATIVE
-  Images: 4
+  Label: POSITIVE
+  Images: 35
   Folder: 2/
 
 Sample 4 (Row 3):
-  Label: NEGATIVE
-  Images: 6
+  Label: POSITIVE
+  Images: 8
   Folder: 3/
 
 Sample 5 (Row 4):
-  Label: NEGATIVE
-  Images: 3
+  Label: POSITIVE
+  Images: 8
   Folder: 4/
 
-Sample 6 (Row 6):
+Sample 6 (Row 5):
   Label: NEGATIVE
-  Images: 5
+  Images: 2
+  Folder: 5/
+
+Sample 7 (Row 6):
+  Label: NEGATIVE
+  Images: 2
   Folder: 6/
 
-Sample 7 (Row 8):
+Sample 8 (Row 7):
+  Label: NEGATIVE
+  Images: 6
+  Folder: 7/
+
+Sample 9 (Row 8):
   Label: NEGATIVE
   Images: 4
   Folder: 8/
-
-Sample 8 (Row 9):
-  Label: NEGATIVE
-  Images: 3
-  Folder: 9/
-
-Sample 9 (Row 10):
-  Label: NEGATIVE
-  Images: 6
-  Folder: 10/
-
-Sample 10 (Row 11):
-  Label: NEGATIVE
-  Images: 5
-  Folder: 11/

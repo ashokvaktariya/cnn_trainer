@@ -1,23 +1,40 @@
 === SAMPLE DATA ===
 Row Index: 4
-GLEAMER Finding: NEGATIVE
-Accession Number: SR100425002
-Study Description: XR THORACIC SPINE 2 VIEW
+GLEAMER Finding: POSITIVE
+Accession Number: 2223660.002DVG
+Study Description: L FOOT COMPLETE XRAY
 Body Part: [
-  "TSPINE"
+  "FOOT_OTHER",
+  "FOOT"
 ]
-Clinical Indication: pain
-
-TECHNICAL DATA: Frontal,  and lateral views were obtained of the thoracic spine.
+Clinical Indication: PAIN
 
 
-Exam Technique: nan
-Findings: Thoracic alignment is anatomic. Disk heights are maintained. Vertebral body heights are maintained and there is no endplate defect. Paraspinal soft tissues are within normal limits. 
+Exam Technique: 3 radiographic views of the left foot were obtained.
 
 
-Number of Images: 3
+Findings: There is no evidence of acute fracture or dislocation.
+
+The visualized joint space is well maintained.
+
+The alignment is anatomical.
+
+There is no radiopaque foreign body.
+
+
+
+
+
+
+
+Number of Images: 8
 
 === IMAGES ===
-Image 1: 1.2.392.200036.9107.307.23177.20250822.110326.1019369.jpg (UID: 1.2.392.200036.9107.307.23177.20250822.110326.1019369)
-Image 2: 1.2.392.200036.9107.307.23177.20250822.110326.1019370.jpg (UID: 1.2.392.200036.9107.307.23177.20250822.110326.1019370)
-Image 3: 1.2.250.1.439.5.78.20250822181850505.1059433840.jpg (UID: 1.2.250.1.439.5.78.20250822181850505.1059433840)
+Image 1: 1.2.840.113619.2.305.4.2147483647.1756493421.582422.jpg (UID: 1)
+Image 2: 1.2.840.113619.2.305.4.2147483647.1756493448.643314.jpg (UID: 1)
+Image 3: 1.2.840.113619.2.305.4.2147483647.1756493478.696534.jpg (UID: 1)
+Image 4: 1.2.250.1.439.5.78.20250829210841998.982216526.jpg (UID: 1)
+Image 5: 1.2.250.1.439.5.78.20250829210841997.1314070820.jpg (UID: 1)
+Image 6: 1.2.250.1.439.5.78.20250829210841996.46418513.jpg (UID: 1)
+Image 7: 1.2.250.1.439.5.78.20250829210841997.1650572934.jpg (UID: 1)
+Image 8: 1.2.410.200010.1027.202508291345073688368.20250829.90000.0.jpg (UID: 1)

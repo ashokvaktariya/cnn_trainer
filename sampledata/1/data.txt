@@ -1,24 +1,37 @@
 === SAMPLE DATA ===
 Row Index: 1
-GLEAMER Finding: NEGATIVE
-Accession Number: 2218534.001DVG
-Study Description: R SHOULDER COMPLETE XRAY
+GLEAMER Finding: POSITIVE
+Accession Number: 6.11E+14
+Study Description: XR ANKLE MIN 3 VIEWS RT
 Body Part: [
-  "SHOULDER"
+  "ANKLE"
 ]
-Clinical Indication: H/O UPP HUM FX 2022, PAIN
-
-TECHNICAL DATA:  3 views were obtained of the right shoulder.
+Clinical Indication: Pain
 
 
-Exam Technique: nan
-Findings: There is no fracture or focal bone abnormality. The glenohumeral joint is normally maintained. The acromioclavicular joint appears normal. The humeral head is not high riding. Adjacent soft tissues are within normal limits.  
+Exam Technique: 3 radiographic views of the right ankle were obtained.
 
 
-Number of Images: 4
+Findings: There is no evidence of acute fracture or dislocation.
+
+Small plantar calcaneal enthesophyte.  Chronic fracture of the distal tibia.
+
+
+
+
+
+
+
+
+
+Number of Images: 8
 
 === IMAGES ===
-Image 1: 1.2.840.113619.2.305.4.2147483647.1755634752.456323.jpg (UID: 1.2.840.113619.2.305.4.2147483647.1755634752.456323)
-Image 2: 1.2.840.113619.2.305.4.2147483647.1755634760.263837.jpg (UID: 1.2.840.113619.2.305.4.2147483647.1755634760.263837)
-Image 3: 1.2.840.113619.2.305.4.2147483647.1755634799.262457.jpg (UID: 1.2.840.113619.2.305.4.2147483647.1755634799.262457)
-Image 4: 1.2.250.1.439.5.78.20250819223608846.1402224705.jpg (UID: 1.2.250.1.439.5.78.20250819223608846.1402224705)
+Image 1: 1.2.392.200036.9107.307.22331.20250812.112046.1034847.jpg (UID: 1)
+Image 2: 1.2.392.200036.9107.307.22331.20250812.112046.1034848.jpg (UID: 1)
+Image 3: 1.2.410.200010.202508121132259228368.20250812.90000.0.jpg (UID: 1)
+Image 4: 1.2.392.200036.9107.307.22331.20250812.112046.1034846.jpg (UID: 1)
+Image 5: 1.2.250.1.439.5.78.20250812184912752.904441493.jpg (UID: 1)
+Image 6: 1.2.250.1.439.5.78.20250812184912753.1042410768.jpg (UID: 1)
+Image 7: 1.2.250.1.439.5.78.20250812184912754.365736476.jpg (UID: 1)
+Image 8: 1.2.250.1.439.5.78.20250812184912754.1286407009.jpg (UID: 1)
