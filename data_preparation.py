@@ -18,20 +18,23 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-from config import (
-    CSV_FILE, DATA_ROOT, PREPROCESSED_DIR, 
-    TRAINING_CONFIG, BINARY_CONFIG, LOGGING_CONFIG
-)
+import yaml
+
+# Load YAML configuration
+with open('config_training.yaml', 'r') as f:
+    config = yaml.safe_load(f)
 
 # Setup logging
-logging.basicConfig(level=getattr(logging, LOGGING_CONFIG['log_level']))
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataPreparator:
     """Data preparation and analysis for binary classification"""
     
     def __init__(self, csv_file=None):
-        self.csv_file = csv_file or CSV_FILE
+        self.csv_file = csv_file or config['data']['csv_path']
+        self.image_root = config['data']['image_root']
+        self.output_dir = config['data']['output_dir']
         self.data = None
         self.clean_data = None
         self.stats = {}
