@@ -15,10 +15,16 @@ import os
 import logging
 from PIL import Image
 from collections import Counter
-import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 import yaml
+
+# Optional imports for plotting
+try:
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    PLOTTING_AVAILABLE = True
+except ImportError:
+    PLOTTING_AVAILABLE = False
 
 # Load YAML configuration
 with open('config_training.yaml', 'r') as f:
@@ -32,11 +38,13 @@ class DataPreparator:
     """Data preparation and analysis for binary classification"""
     
     def __init__(self, csv_file=None):
-        self.csv_file = csv_file or config['data']['csv_path']
+        self.csv_file = csv_file or "training_dataset.csv"  # Use new training dataset
         self.image_root = config['data']['image_root']
         self.output_dir = config['data']['output_dir']
         self.data = None
         self.clean_data = None
+        self.train_data = None
+        self.val_data = None
         self.stats = {}
         
         logger.info(f"🔧 Initializing Data Preparator with {self.csv_file}")
@@ -90,19 +98,28 @@ class DataPreparator:
         return None
     
     def _find_image_file_by_filename(self, filename):
-        """Find image file by exact filename"""
-        base_dir = self.image_root  # Use config path
+        """Find image file by exact filename in gleamer-images folder"""
+        # Server path: /mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/gleamer-images
+        gleamer_images_dir = os.path.join(self.image_root, "gleamer-images")
         
-        # Check main directory
-        image_path = os.path.join(base_dir, filename)
+        # Check main gleamer-images directory
+        image_path = os.path.join(gleamer_images_dir, filename)
         if os.path.exists(image_path):
             return image_path
         
-        # Check subdirectories
+        # Check subdirectories in gleamer-images
         for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2', 'fracture', 'normal']:
-            image_path = os.path.join(base_dir, subdir, filename)
+            image_path = os.path.join(gleamer_images_dir, subdir, filename)
             if os.path.exists(image_path):
                 return image_path
+        
+        # Also check if filename exists in any subdirectory (recursive search)
+        try:
+            for root, dirs, files in os.walk(gleamer_images_dir):
+                if filename in files:
+                    return os.path.join(root, filename)
+        except Exception as e:
+            logger.warning(f"Error searching for {filename}: {e}")
         
         return None
     
@@ -160,25 +177,33 @@ class DataPreparator:
             download_urls_string = str(row['download_urls'])
             try:
                 import json
+                import ast
+                
                 # Try to parse as JSON array first
                 try:
                     download_urls = json.loads(download_urls_string)
                     if not isinstance(download_urls, list):
                         download_urls = [download_urls]
                 except json.JSONDecodeError:
-                    # Fallback to comma-separated parsing
-                    if ',' in download_urls_string:
-                        download_urls = [url.strip().strip('"\'[]') for url in download_urls_string.split(',')]
-                    else:
-                        download_urls = [download_urls_string.strip().strip('"\'[]')]
+                    # Try ast.literal_eval for Python list format
+                    try:
+                        download_urls = ast.literal_eval(download_urls_string)
+                        if not isinstance(download_urls, list):
+                            download_urls = [download_urls]
+                    except (ValueError, SyntaxError):
+                        # Fallback to comma-separated parsing
+                        if ',' in download_urls_string:
+                            download_urls = [url.strip().strip('"\'[]') for url in download_urls_string.split(',')]
+                        else:
+                            download_urls = [download_urls_string.strip().strip('"\'[]')]
                 
                 # Extract filenames from URLs
                 image_filenames = []
                 for url in download_urls:
-                    if url and url != 'nan':
-                        # Extract filename from URL
-                        filename = os.path.basename(url.strip())
-                        if filename:
+                    if url and url != 'nan' and url != 'None':
+                        # Extract filename from URL (everything after the last '/')
+                        filename = url.split('/')[-1].strip()
+                        if filename and filename != 'nan':
                             image_filenames.append(filename)
                 
                 # Check for valid images
@@ -211,6 +236,44 @@ class DataPreparator:
             'valid_images_found': valid_images_found,
             'valid_records': len(self.clean_data),
             'success_rate': len(self.clean_data)/total_processed*100
+        }
+        
+        return self.clean_data
+    
+    def filter_confidence_scores(self):
+        """Filter data based on confidence scores (keep high/low, skip medium)"""
+        logger.info("🎯 Filtering by confidence scores...")
+        
+        if self.clean_data is None or len(self.clean_data) == 0:
+            logger.error("❌ No clean data available. Run filter_valid_images() first.")
+            return None
+        
+        # Check if confidence column exists
+        if 'confidence' not in self.clean_data.columns:
+            logger.warning("⚠️ No confidence column found. Skipping confidence filtering.")
+            return self.clean_data
+        
+        # Define confidence thresholds
+        high_confidence_threshold = 0.8
+        low_confidence_threshold = 0.2
+        
+        # Filter for high confidence (>= 0.8) or low confidence (<= 0.2)
+        confidence_filtered = self.clean_data[
+            (self.clean_data['confidence'] >= high_confidence_threshold) |
+            (self.clean_data['confidence'] <= low_confidence_threshold)
+        ].copy()
+        
+        logger.info(f"✅ Confidence filtering complete:")
+        logger.info(f"   Original records: {len(self.clean_data):,}")
+        logger.info(f"   High/Low confidence records: {len(confidence_filtered):,}")
+        logger.info(f"   Removed medium confidence: {len(self.clean_data) - len(confidence_filtered):,}")
+        
+        self.clean_data = confidence_filtered
+        
+        self.stats['confidence_filtering'] = {
+            'original_records': len(self.clean_data),
+            'filtered_records': len(confidence_filtered),
+            'removed_records': len(self.clean_data) - len(confidence_filtered)
         }
         
         return self.clean_data
@@ -255,6 +318,63 @@ class DataPreparator:
         }
         
         return self.clean_data
+    
+    def split_train_validation(self, train_ratio=0.85):
+        """Split data into training and validation sets (85:15)"""
+        logger.info("📊 Splitting data into train/validation sets...")
+        
+        if self.clean_data is None:
+            logger.error("❌ No clean data available.")
+            return None, None
+        
+        # Stratified split to maintain class distribution
+        from sklearn.model_selection import train_test_split
+        
+        # Split the data
+        train_data, val_data = train_test_split(
+            self.clean_data,
+            test_size=1-train_ratio,
+            random_state=42,
+            stratify=self.clean_data['binary_label']
+        )
+        
+        # Reset indices
+        train_data = train_data.reset_index(drop=True)
+        val_data = val_data.reset_index(drop=True)
+        
+        logger.info(f"✅ Train/Validation split complete:")
+        logger.info(f"   Training records: {len(train_data):,} ({len(train_data)/len(self.clean_data)*100:.1f}%)")
+        logger.info(f"   Validation records: {len(val_data):,} ({len(val_data)/len(self.clean_data)*100:.1f}%)")
+        
+        # Show class distribution in each set
+        train_counts = train_data['binary_label'].value_counts().sort_index()
+        val_counts = val_data['binary_label'].value_counts().sort_index()
+        
+        logger.info("📊 Training set distribution:")
+        for label, count in train_counts.items():
+            label_name = 'NEGATIVE' if label == 0 else 'POSITIVE'
+            percentage = (count / len(train_data)) * 100
+            logger.info(f"   {label_name}: {count:,} ({percentage:.1f}%)")
+        
+        logger.info("📊 Validation set distribution:")
+        for label, count in val_counts.items():
+            label_name = 'NEGATIVE' if label == 0 else 'POSITIVE'
+            percentage = (count / len(val_data)) * 100
+            logger.info(f"   {label_name}: {count:,} ({percentage:.1f}%)")
+        
+        self.train_data = train_data
+        self.val_data = val_data
+        
+        self.stats['train_val_split'] = {
+            'train_records': len(train_data),
+            'val_records': len(val_data),
+            'train_ratio': len(train_data)/len(self.clean_data),
+            'val_ratio': len(val_data)/len(self.clean_data),
+            'train_class_distribution': dict(train_counts),
+            'val_class_distribution': dict(val_counts)
+        }
+        
+        return train_data, val_data
     
     def balance_classes(self, target_ratio=0.5):
         """Balance POSITIVE and NEGATIVE classes"""
@@ -358,6 +478,53 @@ class DataPreparator:
         
         return output_file
     
+    def save_train_val_datasets(self):
+        """Save training and validation datasets separately"""
+        if self.train_data is None or self.val_data is None:
+            logger.error("❌ No train/validation data to save. Run split_train_validation() first.")
+            return None, None
+        
+        # Create output directory if it doesn't exist
+        os.makedirs(self.output_dir, exist_ok=True)
+        
+        # Save training dataset
+        train_file = os.path.join(self.output_dir, "train_dataset.csv")
+        self.train_data.to_csv(train_file, index=False)
+        logger.info(f"💾 Training dataset saved to: {train_file}")
+        
+        # Save validation dataset
+        val_file = os.path.join(self.output_dir, "val_dataset.csv")
+        self.val_data.to_csv(val_file, index=False)
+        logger.info(f"💾 Validation dataset saved to: {val_file}")
+        
+        # Save combined statistics
+        stats_file = os.path.join(self.output_dir, "dataset_stats.json")
+        import json
+        
+        # Convert numpy types to native Python types for JSON serialization
+        def convert_numpy_types(obj):
+            if isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            else:
+                return obj
+        
+        # Convert stats to JSON-serializable format
+        json_stats = convert_numpy_types(self.stats)
+        
+        with open(stats_file, 'w') as f:
+            json.dump(json_stats, f, indent=2)
+        logger.info(f"📊 Statistics saved to: {stats_file}")
+        
+        return train_file, val_file
+    
     def generate_report(self, output_dir=None):
         """Generate comprehensive data preparation report"""
         if output_dir is None:
@@ -377,9 +544,11 @@ class DataPreparator:
     
     def _create_distribution_plots(self, output_dir):
         """Create distribution plots"""
+        if not PLOTTING_AVAILABLE:
+            logger.warning("⚠️ matplotlib/seaborn not available for plotting")
+            return
+            
         try:
-            import matplotlib.pyplot as plt
-            import seaborn as sns
             
             plt.style.use('default')
             fig, axes = plt.subplots(2, 2, figsize=(15, 10))
@@ -497,19 +666,23 @@ def main():
     # Filter valid images (full dataset processing)
     preparator.filter_valid_images()  # Process full dataset
     
+    # Filter by confidence scores (if available)
+    preparator.filter_confidence_scores()
+    
     # Filter for binary classification
     preparator.filter_binary_labels()
     
-    # Balance classes
-    preparator.balance_classes()
+    # Split into train/validation (85:15)
+    preparator.split_train_validation(train_ratio=0.85)
     
-    # Save clean dataset
-    preparator.save_clean_dataset()
+    # Save train/validation datasets
+    preparator.save_train_val_datasets()
     
     # Generate report
     preparator.generate_report()
     
     logger.info("🎉 Data preparation complete!")
+    logger.info("✅ Training and validation datasets ready!")
     
     return preparator
 
