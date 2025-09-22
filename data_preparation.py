@@ -296,7 +296,7 @@ class DataPreparator:
             return None
         
         if output_file is None:
-            output_file = os.path.join(PREPROCESSED_DIR, "binary_medical_dataset.csv")
+            output_file = os.path.join(self.output_dir, "binary_medical_dataset.csv")
         
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -336,7 +336,7 @@ class DataPreparator:
     def generate_report(self, output_dir=None):
         """Generate comprehensive data preparation report"""
         if output_dir is None:
-            output_dir = PREPROCESSED_DIR
+            output_dir = self.output_dir
         
         os.makedirs(output_dir, exist_ok=True)
         
