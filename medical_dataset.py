@@ -94,6 +94,23 @@ class BinaryMedicalDataset(Dataset):
         
         return None
     
+    def _find_image_file_by_filename(self, filename):
+        """Find image file by exact filename"""
+        base_dir = config['data']['image_root']  # Use config path
+        
+        # Check main directory
+        image_path = os.path.join(base_dir, filename)
+        if os.path.exists(image_path):
+            return image_path
+        
+        # Check subdirectories
+        for subdir in ['images', 'data', 'positive', 'negative', 'Negetive', 'Negative 2', 'fracture', 'normal']:
+            image_path = os.path.join(base_dir, subdir, filename)
+            if os.path.exists(image_path):
+                return image_path
+        
+        return None
+    
     def _is_valid_image(self, image_path):
         """Check if image is valid (not blank)"""
         try:
@@ -134,28 +151,36 @@ class BinaryMedicalDataset(Dataset):
         # Get label
         label = int(row['label'])  # 0 for NEGATIVE, 1 for POSITIVE
         
-        # Parse UIDs from SOP_INSTANCE_UID_ARRAY
-        uid_string = str(row['SOP_INSTANCE_UID_ARRAY'])
+        # Parse download URLs to get image filenames
+        download_urls_string = str(row['download_urls'])
         try:
             import json
             # Try to parse as JSON array first
             try:
-                uids = json.loads(uid_string)
-                if not isinstance(uids, list):
-                    uids = [uids]
+                download_urls = json.loads(download_urls_string)
+                if not isinstance(download_urls, list):
+                    download_urls = [download_urls]
             except json.JSONDecodeError:
                 # Fallback to comma-separated parsing
-                if ',' in uid_string:
-                    uids = [uid.strip().strip('"\'[]') for uid in uid_string.split(',')]
+                if ',' in download_urls_string:
+                    download_urls = [url.strip().strip('"\'[]') for url in download_urls_string.split(',')]
                 else:
-                    uids = [uid_string.strip().strip('"\'[]')]
+                    download_urls = [download_urls_string.strip().strip('"\'[]')]
+            
+            # Extract filenames from URLs
+            image_filenames = []
+            for url in download_urls:
+                if url and url != 'nan':
+                    # Extract filename from URL
+                    filename = os.path.basename(url.strip())
+                    if filename:
+                        image_filenames.append(filename)
             
             # Find first valid image
             image_path = None
-            for uid in uids:
-                if uid and uid != 'nan':
-                    uid = uid.strip()
-                    found_path = self._find_image_file(uid)
+            for filename in image_filenames:
+                if filename:
+                    found_path = self._find_image_file_by_filename(filename)
                     if found_path and self._is_valid_image(found_path):
                         image_path = found_path
                         break
