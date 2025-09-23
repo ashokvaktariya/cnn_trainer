@@ -23,35 +23,41 @@ model:
   architecture: "efficientnet_b7"  # Maximum accuracy for medical imaging
   num_classes: 2
   pretrained: true
-  dropout: 0.4
+  dropout: 0.3  # Reduced dropout for better feature learning
   
   # Class labels
   class_names: ["NEGATIVE", "POSITIVE"]
-  class_weights: [1.0, 2.0]  # Weighted for imbalanced medical data
+  class_weights: [1.0, 3.0]  # Increased weight for positive class (fractures)
+  
+  # Advanced model settings
+  use_focal_loss: true  # Better for imbalanced medical data
+  focal_alpha: 0.25
+  focal_gamma: 2.0
+  target_accuracy: 0.90  # Higher target
 
 # Training Configuration
 training:
-  batch_size: 8  # Reduced for B7 model (larger)
-  num_epochs: 150
-  learning_rate: 0.0003  # Lower LR for B7
-  weight_decay: 0.0001
+  batch_size: 6  # Smaller batch for better gradient updates
+  num_epochs: 200  # More epochs for better convergence
+  learning_rate: 0.0001  # Lower LR for more stable training
+  weight_decay: 0.00005  # Reduced weight decay
   
   # Optimizer
   optimizer: "adamw"
   scheduler: "cosine"
-  warmup_epochs: 15
+  warmup_epochs: 20  # Longer warmup
   
   # Early stopping
-  patience: 20
-  min_delta: 0.001
+  patience: 30  # More patience for better convergence
+  min_delta: 0.0005  # Smaller improvement threshold
   
   # Mixed precision
   use_amp: true
   
   # Checkpointing
   save_best: true
-  save_frequency: 5
-  save_every_n_epochs: 5
+  save_frequency: 3
+  save_every_n_epochs: 3
 
 # Hardware Configuration
 hardware:

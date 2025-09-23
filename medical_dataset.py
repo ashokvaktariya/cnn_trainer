@@ -231,13 +231,18 @@ def get_transforms(mode='train'):
     image_size = config['data']['image_size'][0]  # Use first dimension (600 for B7)
     
     if mode == 'train':
-        # Training transforms with augmentation
+        # Enhanced training transforms for medical imaging
         transform = transforms.Compose([
-            transforms.Resize((int(image_size * 1.1), int(image_size * 1.1))),  # Slightly larger for cropping
+            transforms.Resize((int(image_size * 1.2), int(image_size * 1.2))),  # Larger resize for better cropping
             transforms.RandomCrop((image_size, image_size)),
             transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomRotation(degrees=15),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2),
+            transforms.RandomVerticalFlip(p=0.3),  # Medical images can be flipped vertically
+            transforms.RandomRotation(degrees=10),  # Reduced rotation for medical accuracy
+            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)),  # Translation and scaling
+            transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.1),  # Reduced color jitter
+            transforms.RandomApply([
+                transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 0.5))
+            ], p=0.2),  # Occasional blur for robustness
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalization
         ])

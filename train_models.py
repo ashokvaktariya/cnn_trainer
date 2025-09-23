@@ -35,7 +35,15 @@ class BinaryMedicalTrainer:
         self.model = model.to(device)
         self.device = device
         self.model_name = model_name
-        self.save_dir = save_dir or os.path.join(config['data']['output_dir'], 'checkpoints')
+        
+        # Create timestamped save directory
+        if save_dir is None:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_dir = os.path.join(config['data']['output_dir'], 'checkpoints')
+            self.save_dir = os.path.join(base_dir, f"{model_name}_{timestamp}")
+        else:
+            self.save_dir = save_dir
         self.best_accuracy = 0.0
         self.train_losses = []
         self.val_losses = []
@@ -229,7 +237,7 @@ class BinaryMedicalTrainer:
     def plot_training_curves(self, save_path=None):
         """Plot training curves"""
         if save_path is None:
-            save_path = os.path.join(config['data']['output_dir'], f"{self.model_name}_training_curves.png")
+            save_path = os.path.join(self.save_dir, f"{self.model_name}_training_curves.png")
         
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         
@@ -381,7 +389,7 @@ class BinaryMedicalTrainer:
             'final_f1': f1
         }
         
-        results_path = os.path.join(config['data']['output_dir'], f"{self.model_name}_training_results.json")
+        results_path = os.path.join(self.save_dir, f"{self.model_name}_training_results.json")
         os.makedirs(os.path.dirname(results_path), exist_ok=True)
         
         # Convert numpy types to native Python types for JSON serialization
