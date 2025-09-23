@@ -5,10 +5,10 @@ import random
 
 # Paths
 IMAGE_ROOT = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-dicom/"
-OUTPUT_DIR = "/"
+OUTPUT_DIR = "./random_dicom_samples"
 
 def main():
-    print("Copying 15 random DICOM files to root...")
+    print("Copying 15 random DICOM files...")
     
     # Get all DICOM files
     dicom_files = []
@@ -36,7 +36,7 @@ def main():
         except Exception as e:
             print(f"File {i+1}: ERROR copying {filename} - {e}")
     
-    print(f"Done! Copied {copied_count} DICOM files to root directory")
+    print(f"Done! Copied {copied_count} DICOM files to {OUTPUT_DIR}")
 
 if __name__ == "__main__":
     main()
