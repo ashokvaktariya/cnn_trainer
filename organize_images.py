@@ -87,8 +87,8 @@ def main():
                 stats['not_found'] += 1
                 continue
             
-            # Create target filename
-            target_filename = f"{case_id}_{image_index:02d}_{uid}.jpg"
+            # Keep original filename
+            target_filename = filename
             target_path = target_dir / target_filename
             
             # Skip if already exists
