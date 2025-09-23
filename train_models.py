@@ -229,7 +229,7 @@ class BinaryMedicalTrainer:
     def plot_training_curves(self, save_path=None):
         """Plot training curves"""
         if save_path is None:
-            save_path = os.path.join(RESULTS_DIR, f"{self.model_name}_training_curves.png")
+            save_path = os.path.join(config['data']['output_dir'], f"{self.model_name}_training_curves.png")
         
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         
@@ -381,7 +381,7 @@ class BinaryMedicalTrainer:
             'final_f1': f1
         }
         
-        results_path = os.path.join(RESULTS_DIR, f"{self.model_name}_training_results.json")
+        results_path = os.path.join(config['data']['output_dir'], f"{self.model_name}_training_results.json")
         os.makedirs(os.path.dirname(results_path), exist_ok=True)
         
         # Convert numpy types to native Python types for JSON serialization
