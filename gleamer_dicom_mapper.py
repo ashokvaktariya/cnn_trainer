@@ -615,6 +615,17 @@ class GleamerDicomMapper:
                 # Determine label based on report content
                 label = self.determine_label_from_report(report_info)
                 
+                # Debug: Log first few examples
+                if self.stats['report_tags_found'] < 5:
+                    logger.info(f"🔍 Sample {self.stats['report_tags_found'] + 1}:")
+                    logger.info(f"   StudyDescription: '{report_info['study_description']}'")
+                    logger.info(f"   Findings: '{report_info['findings']}'")
+                    logger.info(f"   ClinicalIndication: '{report_info['clinical_indication']}'")
+                    logger.info(f"   SeriesDescription: '{report_info['series_description']}'")
+                    logger.info(f"   Modality: '{report_info['modality']}'")
+                    logger.info(f"   BodyPart: '{report_info['body_part']}'")
+                    logger.info(f"   → Label: {label}")
+                
                 mapping['report_info'] = report_info
                 mapping['label'] = label
                 
@@ -630,7 +641,7 @@ class GleamerDicomMapper:
     def determine_label_from_report(self, report_info):
         """Determine label from report information"""
         # Check for fracture indicators
-        fracture_keywords = ['fracture', 'broken', 'crack', 'break', 'fissure']
+        fracture_keywords = ['fracture', 'broken', 'crack', 'break', 'fissure', 'dislocation', 'avulsion']
         
         # Check StudyDescription
         study_desc = report_info['study_description'].lower()
@@ -641,21 +652,40 @@ class GleamerDicomMapper:
         findings = report_info['findings'].lower()
         if any(keyword in findings for keyword in fracture_keywords):
             return 'POSITIVE'
-        if 'no acute' in findings or 'no fracture' in findings or 'normal' in findings:
+        if 'no acute' in findings or 'no fracture' in findings or 'normal' in findings or 'unremarkable' in findings:
             return 'NEGATIVE'
         
         # Check ClinicalIndication
         clinical = report_info['clinical_indication'].lower()
-        trauma_keywords = ['trauma', 'injury', 'fall', 'accident', 'pain']
+        trauma_keywords = ['trauma', 'injury', 'fall', 'accident', 'pain', 'hurt', 'damage']
         if any(keyword in clinical for keyword in trauma_keywords):
             return 'POSITIVE'
         
         # Check SeriesDescription
         series_desc = report_info['series_description'].lower()
-        if 'fracture' in series_desc:
+        if any(keyword in series_desc for keyword in fracture_keywords):
             return 'POSITIVE'
-        if 'negative' in series_desc:
+        if 'negative' in series_desc or 'normal' in series_desc:
             return 'NEGATIVE'
+        
+        # Check Modality for X-ray specific terms
+        modality = report_info['modality'].lower()
+        if modality in ['cr', 'dx', 'xr']:  # Computed Radiography, Digital X-ray, X-ray
+            # For X-rays, if we have trauma indicators, label as POSITIVE
+            if any(keyword in clinical for keyword in trauma_keywords):
+                return 'POSITIVE'
+        
+        # Check BodyPart for trauma-prone areas
+        body_part = report_info['body_part'].lower()
+        trauma_body_parts = ['wrist', 'ankle', 'hand', 'foot', 'elbow', 'knee', 'shoulder', 'hip', 'spine', 'rib']
+        if any(part in body_part for part in trauma_body_parts):
+            # If it's a trauma-prone body part and we have clinical indication, label as POSITIVE
+            if any(keyword in clinical for keyword in trauma_keywords):
+                return 'POSITIVE'
+        
+        # More lenient approach - if we have any trauma indication, label as POSITIVE
+        if any(keyword in clinical for keyword in trauma_keywords):
+            return 'POSITIVE'
         
         # Default to NEGATIVE if no clear indicators
         return 'NEGATIVE'
@@ -816,6 +846,20 @@ class GleamerDicomMapper:
         if self.stats['gleamer_images_found'] > 0:
             filter_rate = ((self.stats['summary_reports_filtered'] + self.stats['low_quality_filtered']) / self.stats['gleamer_images_found']) * 100
             logger.info(f"Overall filter rate: {filter_rate:.1f}%")
+        
+        # Labeling summary
+        logger.info("")
+        logger.info("🏷️ LABELING SUMMARY:")
+        logger.info(f"   Positive cases: {self.stats['positive_with_fracture']}")
+        logger.info(f"   Negative cases: {self.stats['negative_cases']}")
+        logger.info(f"   Relabeled cases: {self.stats['positive_without_fracture']}")
+        
+        if self.stats['positive_with_fracture'] == 0:
+            logger.warning("⚠️ No positive cases found! Check labeling criteria.")
+            logger.info("💡 Consider:")
+            logger.info("   - Check if DICOM metadata contains fracture keywords")
+            logger.info("   - Verify ClinicalIndication field has trauma indicators")
+            logger.info("   - Review StudyDescription and Findings fields")
         
         logger.info("🎉 Advanced mapping and dataset preparation completed!")
 
