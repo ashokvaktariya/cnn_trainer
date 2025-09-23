@@ -660,9 +660,9 @@ class GleamerDicomMapper:
         # Default to NEGATIVE if no clear indicators
         return 'NEGATIVE'
     
-    def create_dataset_splits(self, train_ratio=0.8, val_ratio=0.2):
-        """Create 80/20 train/validation splits"""
-        logger.info("📊 Creating 80/20 train/validation splits...")
+    def create_dataset_splits(self, train_ratio=0.9, val_ratio=0.1):
+        """Create 90/10 train/validation splits"""
+        logger.info("📊 Creating 90/10 train/validation splits...")
         
         # Separate by label
         positive_files = [m for m in self.mapped_pairs if m.get('label') == 'POSITIVE']
@@ -828,6 +828,10 @@ def main():
                        help='Path to DICOM images directory')
     parser.add_argument('--output-dir', default='mapped_dataset',
                        help='Output directory for mapped dataset')
+    parser.add_argument('--train-ratio', type=float, default=0.9,
+                       help='Training set ratio (default: 0.9 for 90/10 split)')
+    parser.add_argument('--val-ratio', type=float, default=0.1,
+                       help='Validation set ratio (default: 0.1 for 90/10 split)')
     
     args = parser.parse_args()
     
@@ -852,7 +856,7 @@ def main():
     mapper.handle_positive_without_fracture()
     
     # Create dataset splits
-    mapper.create_dataset_splits()
+    mapper.create_dataset_splits(train_ratio=args.train_ratio, val_ratio=args.val_ratio)
     
     # Save results
     mapper.save_results()
