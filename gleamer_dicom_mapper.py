@@ -27,7 +27,7 @@ class GleamerDicomMapper:
     """Maps GLEAMER images to DICOM images and prepares training dataset"""
     
     def __init__(self, gleamer_path="/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/",
-                 dicom_path="/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/",
+                 dicom_path="/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-dicom/",
                  output_dir="mapped_dataset"):
         self.gleamer_path = Path(gleamer_path)
         self.dicom_path = Path(dicom_path)
@@ -82,30 +82,16 @@ class GleamerDicomMapper:
         return self.gleamer_images
     
     def find_dicom_images(self):
-        """Find DICOM images"""
-        logger.info("🔍 Scanning for DICOM images...")
+        """Find DICOM images - focus on .dcm files only"""
+        logger.info("🔍 Scanning for DICOM images (.dcm files only)...")
         
-        # Look for DICOM files
-        extensions = ['*.dcm', '*.DCM', '*.dicom', '*.DICOM']
+        # Look for .dcm files only
+        extensions = ['*.dcm', '*.DCM']
         
         for ext in extensions:
             files = list(self.dicom_path.rglob(ext))
             self.dicom_images.extend(files)
             logger.info(f"Found {len(files)} files with extension {ext}")
-        
-        # Also look for files without extension
-        all_files = list(self.dicom_path.rglob('*'))
-        potential_dicom = []
-        
-        for file_path in all_files[:10000]:  # Limit scan for performance
-            if file_path.is_file() and not file_path.suffix:
-                try:
-                    pydicom.dcmread(str(file_path), stop_before_pixels=True)
-                    potential_dicom.append(file_path)
-                except:
-                    pass
-        
-        self.dicom_images.extend(potential_dicom)
         
         # Remove duplicates
         self.dicom_images = list(set(self.dicom_images))
@@ -452,7 +438,7 @@ def main():
     parser = argparse.ArgumentParser(description='Map GLEAMER images to DICOM and prepare training dataset')
     parser.add_argument('--gleamer-path', default='/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/',
                        help='Path to GLEAMER images directory')
-    parser.add_argument('--dicom-path', default='/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/',
+    parser.add_argument('--dicom-path', default='/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-dicom/',
                        help='Path to DICOM images directory')
     parser.add_argument('--output-dir', default='mapped_dataset',
                        help='Output directory for mapped dataset')
