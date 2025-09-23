@@ -1,66 +1,42 @@
 #!/usr/bin/env python3
-import pandas as pd
 import os
 import shutil
-import json
 import random
 
 # Paths
-CSV_PATH = "processed_dicom_image_url_file.csv"
 IMAGE_ROOT = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-dicom/"
 OUTPUT_DIR = "/"
 
-def find_image(filename):
-    for root, dirs, files in os.walk(IMAGE_ROOT):
-        if filename in files:
-            return os.path.join(root, filename)
-    return None
-
 def main():
-    print("Copying 15 random samples to root...")
+    print("Copying 15 random DICOM files to root...")
     
-    # Load CSV and get 15 random records
-    df = pd.read_csv(CSV_PATH)
-    random_records = df.sample(n=15, random_state=42)
-    print(f"Selected {len(random_records)} random records")
+    # Get all DICOM files
+    dicom_files = []
+    for root, dirs, files in os.walk(IMAGE_ROOT):
+        for file in files:
+            if file.lower().endswith('.dcm') or file.lower().endswith('.dicom'):
+                dicom_files.append(os.path.join(root, file))
+    
+    print(f"Found {len(dicom_files)} DICOM files")
+    
+    # Select 15 random files
+    random_files = random.sample(dicom_files, min(15, len(dicom_files)))
+    print(f"Selected {len(random_files)} random files")
     
     copied_count = 0
     
-    for i, (_, row) in enumerate(random_records.iterrows()):
-        # Extract image URLs from download_urls column
-        urls_str = str(row['download_urls'])
-        print(f"Record {i+1} URLs: {urls_str[:100]}...")
+    for i, file_path in enumerate(random_files):
+        filename = os.path.basename(file_path)
+        dest_path = os.path.join(OUTPUT_DIR, filename)
         
         try:
-            # Try to parse as Python list literal
-            urls = eval(urls_str)
-            if not isinstance(urls, list):
-                urls = [urls]
-        except:
-            try:
-                # Try JSON parsing
-                urls = json.loads(urls_str)
-                if not isinstance(urls, list):
-                    urls = [urls]
-            except:
-                urls = [urls_str]
-        
-        print(f"Record {i+1}: Found {len(urls)} URLs")
-        
-        # Copy each image to root directory
-        for url in urls:
-            if url and url != 'nan':
-                filename = os.path.basename(url.strip())
-                print(f"Looking for: {filename}")
-                image_path = find_image(filename)
-                if image_path:
-                    shutil.copy2(image_path, os.path.join(OUTPUT_DIR, filename))
-                    print(f"Record {i+1}: Copied {filename}")
-                    copied_count += 1
-                else:
-                    print(f"Record {i+1}: NOT FOUND {filename}")
+            shutil.copy2(file_path, dest_path)
+            print(f"File {i+1}: Copied {filename}")
+            copied_count += 1
+        except Exception as e:
+            print(f"File {i+1}: ERROR copying {filename} - {e}")
     
-    print(f"Done! Copied {copied_count} images to root directory")
+    print(f"Done! Copied {copied_count} DICOM files to root directory")
 
 if __name__ == "__main__":
     main()
