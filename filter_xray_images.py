@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-X-ray Image Filter
+X-ray Image Filter - Improved Version
 Removes document/report images from filtered_images folders, keeping only X-ray images
-Uses OCR to detect text and filter out non-X-ray images
+Uses simple image analysis and optional OCR (more conservative approach)
 
 Required packages:
-pip install opencv-python pytesseract Pillow numpy tqdm
+pip install opencv-python Pillow numpy tqdm
 
+Optional OCR (if available):
+pip install pytesseract
 For tesseract OCR:
 Ubuntu/Debian: sudo apt-get install tesseract-ocr
 CentOS/RHEL: sudo yum install tesseract
-Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
-macOS: brew install tesseract
 """
 
 import os
@@ -20,11 +20,18 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
-import pytesseract
 import logging
 from tqdm import tqdm
 import argparse
 import time
+
+# Try to import pytesseract, but don't fail if not available
+try:
+    import pytesseract
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
+    print("⚠️ pytesseract not available - using image analysis only")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -51,100 +58,98 @@ class XrayImageFilter:
         logger.info(f"📁 Filtering directory: {self.filtered_images_dir}")
     
     def is_xray_image(self, image_path):
-        """Determine if image is an X-ray (not a document/report)"""
+        """Determine if image is an X-ray (not a document/report) - Conservative approach"""
         try:
             # Load image
             image = cv2.imread(str(image_path))
             if image is None:
                 return False
             
-            # Convert to PIL for OCR
-            pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            
             # Get image dimensions
             height, width = image.shape[:2]
             
-            # Check 1: Image size - X-rays are usually larger than documents
-            if width < 200 or height < 200:
-                logger.debug(f"⚠️ Small image size: {width}x{height} - {image_path.name}")
+            # Check 1: Image size - Very small images are likely not X-rays
+            if width < 100 or height < 100:
+                logger.debug(f"⚠️ Very small image: {width}x{height} - {image_path.name}")
                 return False
             
-            # Check 2: Aspect ratio - X-rays have different aspect ratios than documents
+            # Check 2: Aspect ratio - Extreme ratios suggest documents
             aspect_ratio = width / height
-            if aspect_ratio > 3.0 or aspect_ratio < 0.3:  # Very wide or very tall
-                logger.debug(f"⚠️ Unusual aspect ratio: {aspect_ratio:.2f} - {image_path.name}")
+            if aspect_ratio > 5.0 or aspect_ratio < 0.2:  # Very wide or very tall
+                logger.debug(f"⚠️ Extreme aspect ratio: {aspect_ratio:.2f} - {image_path.name}")
                 return False
             
-            # Check 3: OCR text detection
-            try:
-                # Extract text using OCR
-                text = pytesseract.image_to_string(pil_image, config='--psm 6')
-                text = text.strip().lower()
-                
-                # Check for document indicators
-                document_indicators = [
-                    'report', 'summary', 'findings', 'impression', 'conclusion',
-                    'patient', 'date', 'time', 'physician', 'doctor', 'radiologist',
-                    'study', 'examination', 'procedure', 'technique', 'history',
-                    'clinical', 'indication', 'reason', 'complaint', 'symptoms',
-                    'diagnosis', 'recommendation', 'follow', 'up', 'next',
-                    'no acute', 'no evidence', 'unremarkable', 'normal',
-                    'fracture', 'dislocation', 'abnormality', 'lesion',
-                    'ap', 'pa', 'lateral', 'oblique', 'view', 'views'
-                ]
-                
-                # Count document indicators
-                doc_count = sum(1 for indicator in document_indicators if indicator in text)
-                
-                # If too many document indicators, likely a report
-                if doc_count >= 3:
-                    logger.debug(f"📄 Document detected ({doc_count} indicators): {image_path.name}")
-                    return False
-                
-                # Check 4: Text density - documents have more text
-                if len(text) > 100:  # Lots of text suggests document
-                    logger.debug(f"📄 High text density ({len(text)} chars): {image_path.name}")
-                    return False
-                
-                # Check 5: Look for specific patterns that indicate documents
-                if any(pattern in text for pattern in ['no acute', 'no evidence', 'unremarkable', 'normal']):
-                    if len(text) > 50:  # If it's a full sentence, likely a report
-                        logger.debug(f"📄 Report pattern detected: {image_path.name}")
-                        return False
-                
-            except Exception as e:
-                logger.warning(f"⚠️ OCR error for {image_path.name}: {e}")
-                # If OCR fails, assume it's an X-ray (better to keep than remove)
-                pass
-            
-            # Check 6: Image characteristics - X-rays have specific properties
+            # Check 3: Image characteristics analysis
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
-            # Check for X-ray characteristics
-            # X-rays typically have:
-            # - High contrast between bone and soft tissue
-            # - Specific intensity distribution
-            # - Less uniform backgrounds than documents
-            
-            # Calculate image statistics
+            # Calculate basic statistics
             mean_intensity = np.mean(gray)
             std_intensity = np.std(gray)
             
-            # X-rays typically have moderate mean intensity and good contrast
-            if mean_intensity < 30 or mean_intensity > 220:  # Too dark or too bright
-                logger.debug(f"⚠️ Unusual intensity: {mean_intensity:.1f} - {image_path.name}")
+            # Check 4: Very uniform images (like documents) have low std
+            if std_intensity < 10:  # Very uniform - likely document
+                logger.debug(f"⚠️ Very uniform image (std: {std_intensity:.1f}): {image_path.name}")
                 return False
             
-            if std_intensity < 20:  # Too uniform (like documents)
-                logger.debug(f"⚠️ Low contrast: {std_intensity:.1f} - {image_path.name}")
-                return False
-            
-            # Check 7: Edge detection - X-rays have more complex edges
-            edges = cv2.Canny(gray, 50, 150)
+            # Check 5: Edge analysis - X-rays have more complex structures
+            edges = cv2.Canny(gray, 30, 100)
             edge_density = np.sum(edges > 0) / (width * height)
             
-            if edge_density < 0.01:  # Very few edges (like documents)
-                logger.debug(f"⚠️ Low edge density: {edge_density:.4f} - {image_path.name}")
+            if edge_density < 0.005:  # Very few edges - likely document
+                logger.debug(f"⚠️ Very low edge density: {edge_density:.4f} - {image_path.name}")
+                return False
+            
+            # Check 6: Optional OCR analysis (if available)
+            if OCR_AVAILABLE:
+                try:
+                    # Convert to PIL for OCR
+                    pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+                    
+                    # Extract text using OCR
+                    text = pytesseract.image_to_string(pil_image, config='--psm 6')
+                    text = text.strip().lower()
+                    
+                    # Only remove if we find clear document patterns
+                    document_patterns = [
+                        'report', 'summary', 'findings', 'impression', 'conclusion',
+                        'patient name', 'date of birth', 'physician', 'radiologist',
+                        'study date', 'examination date', 'procedure', 'technique',
+                        'clinical history', 'indication', 'complaint', 'symptoms',
+                        'diagnosis', 'recommendation', 'follow up', 'next step'
+                    ]
+                    
+                    # Count document patterns
+                    doc_patterns_found = sum(1 for pattern in document_patterns if pattern in text)
+                    
+                    # Only remove if we find multiple document patterns AND lots of text
+                    if doc_patterns_found >= 2 and len(text) > 200:
+                        logger.debug(f"📄 Document detected ({doc_patterns_found} patterns, {len(text)} chars): {image_path.name}")
+                        return False
+                    
+                    # Check for specific report phrases
+                    report_phrases = [
+                        'no acute fracture', 'no evidence of', 'unremarkable',
+                        'normal study', 'no abnormality', 'within normal limits'
+                    ]
+                    
+                    if any(phrase in text for phrase in report_phrases) and len(text) > 100:
+                        logger.debug(f"📄 Report phrase detected: {image_path.name}")
+                        return False
+                        
+                except Exception as e:
+                    logger.debug(f"⚠️ OCR error for {image_path.name}: {e}")
+                    # If OCR fails, assume it's an X-ray (conservative approach)
+                    pass
+            
+            # Check 7: Color analysis - X-rays are typically grayscale
+            # Convert to HSV to check saturation
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            saturation = hsv[:, :, 1]
+            mean_saturation = np.mean(saturation)
+            
+            # Very colorful images might be documents/reports
+            if mean_saturation > 50:  # High saturation suggests colored document
+                logger.debug(f"⚠️ High color saturation: {mean_saturation:.1f} - {image_path.name}")
                 return False
             
             # If all checks pass, it's likely an X-ray
@@ -153,7 +158,8 @@ class XrayImageFilter:
             
         except Exception as e:
             logger.error(f"❌ Error processing {image_path.name}: {e}")
-            return False
+            # Conservative approach: if we can't analyze, keep the image
+            return True
     
     def filter_folder(self, folder_path, folder_name):
         """Filter images in a specific folder"""
@@ -229,14 +235,14 @@ class XrayImageFilter:
                 removal_rate = (self.stats['documents_removed'] / self.stats['total_processed']) * 100
                 f.write(f"Document removal rate: {removal_rate:.1f}%\n")
             
-            f.write("\nFILTERING CRITERIA:\n")
-            f.write("- Image size: Minimum 200x200 pixels\n")
-            f.write("- Aspect ratio: Between 0.3 and 3.0\n")
-            f.write("- OCR text analysis: <3 document indicators\n")
-            f.write("- Text density: <100 characters\n")
-            f.write("- Image intensity: Between 30-220\n")
-            f.write("- Contrast: Standard deviation >20\n")
-            f.write("- Edge density: >0.01\n")
+            f.write("\nFILTERING CRITERIA (Conservative Approach):\n")
+            f.write("- Image size: Minimum 100x100 pixels\n")
+            f.write("- Aspect ratio: Between 0.2 and 5.0\n")
+            f.write("- Image uniformity: Standard deviation >10\n")
+            f.write("- Edge density: >0.005\n")
+            f.write("- Color saturation: <50 (grayscale preference)\n")
+            f.write("- OCR analysis: Only removes clear documents with multiple patterns\n")
+            f.write("- Conservative approach: Keeps images when in doubt\n")
         
         logger.info(f"📊 Summary report saved: {report_path}")
 
