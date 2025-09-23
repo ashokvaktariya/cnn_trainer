@@ -10,6 +10,9 @@ OUTPUT_DIR = "./random_dicom_samples"
 def main():
     print("Copying 15 random DICOM files...")
     
+    # Create output directory
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
     # Get all DICOM files
     dicom_files = []
     for root, dirs, files in os.walk(IMAGE_ROOT):
