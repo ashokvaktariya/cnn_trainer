@@ -648,11 +648,11 @@ class GleamerDicomMapper:
         if any(keyword in study_desc for keyword in fracture_keywords):
             return 'POSITIVE'
         
-        # Check Findings - PRIORITY CHECK (most reliable)
+        # Check Findings - HIGHEST PRIORITY (most reliable)
         findings = report_info['findings'].lower()
         
-        # First check for explicit negative findings
-        negative_indicators = ['no acute', 'no fracture', 'normal', 'unremarkable', 'negative for fracture', 'no evidence of fracture']
+        # First check for explicit negative findings - THESE OVERRIDE EVERYTHING
+        negative_indicators = ['no acute', 'no fracture', 'normal', 'unremarkable', 'negative for fracture', 'no evidence of fracture', 'no radiographic evidence', 'there is no evidence of']
         if any(indicator in findings for indicator in negative_indicators):
             return 'NEGATIVE'
         
@@ -660,10 +660,10 @@ class GleamerDicomMapper:
         if any(keyword in findings for keyword in fracture_keywords):
             return 'POSITIVE'
         
-        # Check SeriesDescription - PRIORITY CHECK
+        # Check SeriesDescription - HIGH PRIORITY
         series_desc = report_info['series_description'].lower()
         
-        # First check for explicit negative series
+        # First check for explicit negative series - THESE OVERRIDE CLINICAL INDICATION
         if 'negative' in series_desc and 'fracture' in series_desc:
             return 'NEGATIVE'
         if 'normal' in series_desc:
@@ -673,7 +673,7 @@ class GleamerDicomMapper:
         if any(keyword in series_desc for keyword in fracture_keywords):
             return 'POSITIVE'
         
-        # Check ClinicalIndication - but only if findings/series don't contradict
+        # Check ClinicalIndication - ONLY if findings/series don't contradict
         clinical = report_info['clinical_indication'].lower()
         trauma_keywords = ['trauma', 'injury', 'injured', 'fall', 'accident', 'pain', 'hurt', 'damage']
         
