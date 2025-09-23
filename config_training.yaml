@@ -51,6 +51,7 @@ training:
   # Checkpointing
   save_best: true
   save_frequency: 5
+  save_every_n_epochs: 5
 
 # Hardware Configuration
 hardware:
