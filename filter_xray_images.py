@@ -60,6 +60,22 @@ class XrayImageFilter:
     def is_xray_image(self, image_path):
         """Determine if image is an X-ray (not a document/report) - Conservative approach"""
         try:
+            # Check 0: Skip known X-ray UID patterns (already confirmed X-rays)
+            filename = image_path.name
+            uid = filename.replace('.jpg', '').replace('.jpeg', '').replace('.png', '')
+            
+            # Known X-ray UID patterns (skip analysis for these)
+            known_xray_patterns = [
+                '1.2.840.113619',  # Standard X-rays (40.2% of dataset)
+                '1.2.392.200036'   # Alternative X-rays (14.6% of dataset)
+            ]
+            
+            # If filename starts with known X-ray pattern, skip analysis
+            for pattern in known_xray_patterns:
+                if uid.startswith(pattern):
+                    logger.debug(f"✅ Known X-ray pattern ({pattern}): {filename}")
+                    return True
+            
             # Load image
             image = cv2.imread(str(image_path))
             if image is None:
@@ -236,6 +252,7 @@ class XrayImageFilter:
                 f.write(f"Document removal rate: {removal_rate:.1f}%\n")
             
             f.write("\nFILTERING CRITERIA (Conservative Approach):\n")
+            f.write("- Known X-ray patterns: Skip analysis for 1.2.840.113619 and 1.2.392.200036\n")
             f.write("- Image size: Minimum 100x100 pixels\n")
             f.write("- Aspect ratio: Between 0.2 and 5.0\n")
             f.write("- Image uniformity: Standard deviation >10\n")
