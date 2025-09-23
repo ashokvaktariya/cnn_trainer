@@ -648,25 +648,34 @@ class GleamerDicomMapper:
         if any(keyword in study_desc for keyword in fracture_keywords):
             return 'POSITIVE'
         
-        # Check Findings
+        # Check Findings - PRIORITY CHECK (most reliable)
         findings = report_info['findings'].lower()
+        
+        # First check for explicit negative findings
+        negative_indicators = ['no acute', 'no fracture', 'normal', 'unremarkable', 'negative for fracture', 'no evidence of fracture']
+        if any(indicator in findings for indicator in negative_indicators):
+            return 'NEGATIVE'
+        
+        # Then check for positive findings
         if any(keyword in findings for keyword in fracture_keywords):
             return 'POSITIVE'
-        if 'no acute' in findings or 'no fracture' in findings or 'normal' in findings or 'unremarkable' in findings:
+        
+        # Check SeriesDescription - PRIORITY CHECK
+        series_desc = report_info['series_description'].lower()
+        
+        # First check for explicit negative series
+        if 'negative' in series_desc and 'fracture' in series_desc:
+            return 'NEGATIVE'
+        if 'normal' in series_desc:
             return 'NEGATIVE'
         
-        # Check ClinicalIndication
-        clinical = report_info['clinical_indication'].lower()
-        trauma_keywords = ['trauma', 'injury', 'fall', 'accident', 'pain', 'hurt', 'damage']
-        if any(keyword in clinical for keyword in trauma_keywords):
-            return 'POSITIVE'
-        
-        # Check SeriesDescription
-        series_desc = report_info['series_description'].lower()
+        # Then check for positive series
         if any(keyword in series_desc for keyword in fracture_keywords):
             return 'POSITIVE'
-        if 'negative' in series_desc or 'normal' in series_desc:
-            return 'NEGATIVE'
+        
+        # Check ClinicalIndication - but only if findings/series don't contradict
+        clinical = report_info['clinical_indication'].lower()
+        trauma_keywords = ['trauma', 'injury', 'injured', 'fall', 'accident', 'pain', 'hurt', 'damage']
         
         # Check Modality for X-ray specific terms
         modality = report_info['modality'].lower()
