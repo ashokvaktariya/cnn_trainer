@@ -70,8 +70,24 @@ class DicomToCsvConverter:
     def extract_metadata(self, dicom_file_path):
         """Extracts metadata from a single DICOM file without reading pixel data."""
         try:
-            # Read DICOM file, stopping before pixel data for performance
-            ds = pydicom.dcmread(str(dicom_file_path), stop_before_pixels=True)
+            # Try different reading methods for better compatibility
+            try:
+                # Method 1: Standard read with stop_before_pixels
+                ds = pydicom.dcmread(str(dicom_file_path), stop_before_pixels=True)
+            except Exception as e1:
+                try:
+                    # Method 2: Force reading without validation
+                    ds = pydicom.dcmread(str(dicom_file_path), force=True, stop_before_pixels=True)
+                except Exception as e2:
+                    try:
+                        # Method 3: Read with defer_size
+                        ds = pydicom.dcmread(str(dicom_file_path), defer_size="1 KB", stop_before_pixels=True)
+                    except Exception as e3:
+                        # Method 4: Last resort - read without stop_before_pixels but catch pixel data errors
+                        try:
+                            ds = pydicom.dcmread(str(dicom_file_path), force=True)
+                        except Exception as e4:
+                            raise Exception(f"All reading methods failed. Last error: {str(e4)}")
 
             metadata = {
                 'file_path': str(dicom_file_path),
@@ -99,13 +115,17 @@ class DicomToCsvConverter:
 
         except Exception as e:
             self.error_count += 1
-            logger.debug(f"Error processing {dicom_file_path.name}: {e}")
+            error_msg = str(e)
+            # Log first few errors for debugging
+            if self.error_count <= 5:
+                logger.warning(f"Error processing {dicom_file_path.name}: {error_msg}")
+            
             return {
                 'file_path': str(dicom_file_path),
                 'file_name': dicom_file_path.name,
                 'file_size': dicom_file_path.stat().st_size if dicom_file_path.exists() else 0,
                 'read_success': False,
-                'error': str(e)
+                'error': error_msg
             }
 
     def convert_to_csv(self, max_files=None):
@@ -157,6 +177,31 @@ class DicomToCsvConverter:
         
         success_rate = (sum(1 for m in self.metadata_list if m['read_success']) / len(self.metadata_list)) * 100 if self.metadata_list else 0
         logger.info(f"Success rate: {success_rate:.1f}%")
+        
+        # Analyze common errors
+        failed_records = [m for m in self.metadata_list if not m['read_success']]
+        if failed_records:
+            logger.info("COMMON ERROR ANALYSIS:")
+            error_counts = {}
+            for record in failed_records:
+                error = record.get('error', 'Unknown error')
+                # Extract the main error type
+                if 'File is missing DICOM File Meta Information' in error:
+                    error_type = 'Missing DICOM Meta Information'
+                elif 'Invalid value for VR' in error:
+                    error_type = 'Invalid DICOM Value Representation'
+                elif 'pydicom.errors.InvalidDicomError' in error:
+                    error_type = 'Invalid DICOM Format'
+                elif 'Permission denied' in error:
+                    error_type = 'Permission Denied'
+                else:
+                    error_type = 'Other Error'
+                
+                error_counts[error_type] = error_counts.get(error_type, 0) + 1
+            
+            for error_type, count in sorted(error_counts.items(), key=lambda x: x[1], reverse=True):
+                logger.info(f"  {error_type}: {count} files")
+        
         logger.info(f"Output file: {self.output_csv}")
         
         if self.output_csv.exists():
