@@ -256,8 +256,8 @@ def create_data_loaders(csv_path=None, val_csv_path=None, batch_size=None, num_w
     num_workers = num_workers or config['hardware']['num_workers']
     
     # Use provided CSV paths or fall back to config
-    train_csv = csv_path or os.path.join(config['data']['output_dir'], 'train_dataset.csv')
-    val_csv = val_csv_path or os.path.join(config['data']['output_dir'], 'val_dataset.csv')
+    train_csv = csv_path or config['data']['train_csv']
+    val_csv = val_csv_path or config['data']['val_csv']
     
     # Create datasets with specific CSV files
     train_dataset = BinaryMedicalDataset(
@@ -273,7 +273,7 @@ def create_data_loaders(csv_path=None, val_csv_path=None, batch_size=None, num_w
     )
     
     test_dataset = BinaryMedicalDataset(
-        csv_file=val_csv,  # Use validation CSV for test
+        csv_file=config['data']['test_csv'],  # Use test CSV from config
         transform=get_transforms('val'),
         mode='test'
     )
