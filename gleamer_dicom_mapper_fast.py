@@ -41,10 +41,11 @@ logger = logging.getLogger(__name__)
 class FastGleamerDicomMapper:
     """Fast GLEAMER-DICOM mapper with performance optimizations"""
     
-    def __init__(self, gleamer_path, dicom_path, output_dir):
+    def __init__(self, gleamer_path, dicom_path, output_dir, csv_path='processed_dicom_image_url_file.csv'):
         self.gleamer_path = Path(gleamer_path)
         self.dicom_path = Path(dicom_path)
         self.output_dir = Path(output_dir)
+        self.csv_path = Path(csv_path)
         
         # Create output directory
         self.output_dir.mkdir(exist_ok=True)
@@ -53,6 +54,7 @@ class FastGleamerDicomMapper:
         self.gleamer_images = []
         self.dicom_images = []
         self.mapped_pairs = []
+        self.csv_data = None
         
         # Statistics
         self.stats = {
@@ -64,6 +66,7 @@ class FastGleamerDicomMapper:
             'positive_without_fracture': 0,
             'negative_cases': 0,
             'summary_reports_filtered': 0,
+            'csv_records_loaded': 0,
             'errors': 0
         }
         
@@ -74,6 +77,64 @@ class FastGleamerDicomMapper:
         ]
         
         logger.info("🚀 Fast GLEAMER-DICOM Mapper initialized")
+    
+    def load_csv_data(self):
+        """Load CSV data with GLEAMER labels"""
+        logger.info("📋 Loading CSV data with GLEAMER labels...")
+        
+        if not self.csv_path.exists():
+            logger.error(f"CSV file not found: {self.csv_path}")
+            return False
+        
+        try:
+            self.csv_data = pd.read_csv(self.csv_path)
+            self.stats['csv_records_loaded'] = len(self.csv_data)
+            
+            # Create UID to CSV record mapping
+            self.csv_uid_map = {}
+            for idx, row in self.csv_data.iterrows():
+                # Extract UIDs from SOP_INSTANCE_UID_ARRAY
+                uid_array = row.get('SOP_INSTANCE_UID_ARRAY', '')
+                if pd.notna(uid_array) and uid_array:
+                    try:
+                        # Parse UID array (could be JSON or comma-separated)
+                        import json
+                        try:
+                            uids = json.loads(uid_array)
+                        except:
+                            uids = [uid.strip().strip("'\"") for uid in str(uid_array).split(',')]
+                        
+                        # Map each UID to this CSV record
+                        for uid in uids:
+                            if uid and len(uid) > 10:  # Valid UID
+                                self.csv_uid_map[uid] = {
+                                    'row_index': idx,
+                                    'gleamer_finding': row.get('GLEAMER_FINDING', ''),
+                                    'study_description': row.get('STUDY_DESCRIPTION', ''),
+                                    'findings': row.get('findings', ''),
+                                    'clinical_indication': row.get('clinical_indication', ''),
+                                    'body_part': row.get('BODY_PART_ARRAY', ''),
+                                    'download_urls': row.get('download_urls', '')
+                                }
+                    except Exception as e:
+                        logger.debug(f"Error parsing UID array for row {idx}: {e}")
+                        continue
+            
+            logger.info(f"📊 Loaded {len(self.csv_data)} CSV records")
+            logger.info(f"📊 Created {len(self.csv_uid_map)} UID mappings")
+            
+            # Show GLEAMER_FINDING distribution
+            if 'GLEAMER_FINDING' in self.csv_data.columns:
+                finding_counts = self.csv_data['GLEAMER_FINDING'].value_counts()
+                logger.info("📊 GLEAMER_FINDING distribution:")
+                for finding, count in finding_counts.items():
+                    logger.info(f"   {finding}: {count}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error loading CSV data: {e}")
+            return False
     
     def find_gleamer_images(self):
         """Find all GLEAMER images"""
@@ -225,8 +286,8 @@ class FastGleamerDicomMapper:
         return 'NEGATIVE'
     
     def map_gleamer_to_dicom_fast(self):
-        """Fast mapping without image analysis"""
-        logger.info("🔗 Fast mapping GLEAMER images to DICOM images...")
+        """Fast mapping using CSV data and DICOM metadata"""
+        logger.info("🔗 Fast mapping GLEAMER images to DICOM images using CSV data...")
         
         # Create UID to DICOM mapping
         dicom_uid_map = {}
@@ -244,7 +305,7 @@ class FastGleamerDicomMapper:
         
         logger.info(f"📊 Indexed {len(dicom_uid_map)} DICOM files with UIDs")
         
-        # Map GLEAMER images to DICOM (FAST - no image analysis)
+        # Map GLEAMER images to DICOM and CSV data
         for gleamer_path in tqdm(self.gleamer_images, desc="Mapping GLEAMER images"):
             try:
                 # Extract UID from GLEAMER filename
@@ -253,6 +314,14 @@ class FastGleamerDicomMapper:
                 # Skip summary reports based on UID pattern
                 if self.is_summary_report_pattern(gleamer_uid):
                     self.stats['summary_reports_filtered'] += 1
+                    continue
+                
+                # Get CSV data for this UID
+                csv_data = self.csv_uid_map.get(gleamer_uid, {})
+                gleamer_finding = csv_data.get('gleamer_finding', '')
+                
+                # Skip DOUBT cases (only use POSITIVE/NEGATIVE)
+                if gleamer_finding == 'DOUBT':
                     continue
                 
                 if gleamer_uid and gleamer_uid in dicom_uid_map:
@@ -266,6 +335,8 @@ class FastGleamerDicomMapper:
                         'dicom_path': str(dicom_info['path']),
                         'dicom_filename': dicom_info['path'].name,
                         'dicom_metadata': dicom_info['metadata'],
+                        'csv_data': csv_data,
+                        'gleamer_finding': gleamer_finding,
                         'mapping_success': True
                     }
                     
@@ -273,18 +344,22 @@ class FastGleamerDicomMapper:
                     self.stats['successful_mappings'] += 1
                     
                 else:
-                    # No matching DICOM found
-                    mapping = {
-                        'gleamer_path': str(gleamer_path),
-                        'gleamer_filename': gleamer_path.name,
-                        'gleamer_uid': gleamer_uid,
-                        'dicom_path': None,
-                        'dicom_filename': None,
-                        'dicom_metadata': None,
-                        'mapping_success': False
-                    }
-                    
-                    self.mapped_pairs.append(mapping)
+                    # No matching DICOM found, but still use CSV data if available
+                    if csv_data:
+                        mapping = {
+                            'gleamer_path': str(gleamer_path),
+                            'gleamer_filename': gleamer_path.name,
+                            'gleamer_uid': gleamer_uid,
+                            'dicom_path': None,
+                            'dicom_filename': None,
+                            'dicom_metadata': None,
+                            'csv_data': csv_data,
+                            'gleamer_finding': gleamer_finding,
+                            'mapping_success': False
+                        }
+                        
+                        self.mapped_pairs.append(mapping)
+                        self.stats['successful_mappings'] += 1
                     
             except Exception as e:
                 logger.error(f"Error mapping {gleamer_path.name}: {e}")
@@ -294,36 +369,49 @@ class FastGleamerDicomMapper:
         logger.info(f"📊 Summary reports filtered: {self.stats['summary_reports_filtered']}")
     
     def find_report_tags(self):
-        """Find report tags for each image"""
-        logger.info("📋 Finding report tags...")
+        """Find report tags for each image using CSV data"""
+        logger.info("📋 Finding report tags using CSV data...")
         
         for mapping in tqdm(self.mapped_pairs, desc="Finding report tags"):
-            if mapping['mapping_success'] and mapping['dicom_metadata']:
-                metadata = mapping['dicom_metadata']
+            # Use CSV data for labeling (more reliable than DICOM metadata)
+            csv_data = mapping.get('csv_data', {})
+            gleamer_finding = mapping.get('gleamer_finding', '')
+            
+            if gleamer_finding in ['POSITIVE', 'NEGATIVE']:
+                # Use GLEAMER label as primary source
+                label = gleamer_finding
                 
-                # Extract report information
+                # Extract report information from CSV
                 report_info = {
-                    'study_description': metadata.get('StudyDescription', ''),
-                    'series_description': metadata.get('SeriesDescription', ''),
-                    'findings': metadata.get('Findings', ''),
-                    'clinical_indication': metadata.get('ClinicalIndication', ''),
-                    'modality': metadata.get('Modality', ''),
-                    'body_part': metadata.get('BodyPartExamined', '')
+                    'study_description': csv_data.get('study_description', ''),
+                    'series_description': '',  # Not available in CSV
+                    'findings': csv_data.get('findings', ''),
+                    'clinical_indication': csv_data.get('clinical_indication', ''),
+                    'modality': '',  # Not available in CSV
+                    'body_part': csv_data.get('body_part', '')
                 }
                 
-                # Determine label based on report content
-                label = self.determine_label_from_report(report_info)
+                # For POSITIVE cases, check if DICOM findings contradict
+                if label == 'POSITIVE' and mapping.get('dicom_metadata'):
+                    dicom_metadata = mapping['dicom_metadata']
+                    dicom_findings = dicom_metadata.get('Findings', '').lower()
+                    
+                    # Check for explicit negative findings in DICOM
+                    negative_indicators = ['no acute', 'no fracture', 'normal', 'unremarkable', 'negative for fracture', 'no evidence of fracture', 'no radiographic evidence', 'there is no evidence of']
+                    if any(indicator in dicom_findings for indicator in negative_indicators):
+                        label = 'NEGATIVE'  # Override with DICOM findings
+                        mapping['relabeled'] = True
+                        mapping['relabel_reason'] = 'DICOM findings contradict GLEAMER label'
                 
                 # Debug: Log first few examples
                 if self.stats['report_tags_found'] < 5:
                     logger.info(f"🔍 Sample {self.stats['report_tags_found'] + 1}:")
+                    logger.info(f"   GLEAMER Finding: '{gleamer_finding}'")
                     logger.info(f"   StudyDescription: '{report_info['study_description']}'")
                     logger.info(f"   Findings: '{report_info['findings']}'")
                     logger.info(f"   ClinicalIndication: '{report_info['clinical_indication']}'")
-                    logger.info(f"   SeriesDescription: '{report_info['series_description']}'")
-                    logger.info(f"   Modality: '{report_info['modality']}'")
                     logger.info(f"   BodyPart: '{report_info['body_part']}'")
-                    logger.info(f"   → Label: {label}")
+                    logger.info(f"   → Final Label: {label}")
                 
                 mapping['report_info'] = report_info
                 mapping['label'] = label
@@ -442,6 +530,7 @@ class FastGleamerDicomMapper:
         """Print mapping summary"""
         logger.info("📊 MAPPING SUMMARY")
         logger.info("=" * 50)
+        logger.info(f"CSV records loaded: {self.stats['csv_records_loaded']}")
         logger.info(f"GLEAMER images found: {self.stats['gleamer_images_found']}")
         logger.info(f"DICOM images found: {self.stats['dicom_images_found']}")
         logger.info(f"Successful mappings: {self.stats['successful_mappings']}")
@@ -466,9 +555,11 @@ class FastGleamerDicomMapper:
         if self.stats['positive_with_fracture'] == 0:
             logger.warning("⚠️ No positive cases found! Check labeling criteria.")
             logger.info("💡 Consider:")
-            logger.info("   - Check if DICOM metadata contains fracture keywords")
-            logger.info("   - Verify ClinicalIndication field has trauma indicators")
-            logger.info("   - Review StudyDescription and Findings fields")
+            logger.info("   - Check if CSV GLEAMER_FINDING contains POSITIVE cases")
+            logger.info("   - Verify UID mapping between GLEAMER images and CSV")
+            logger.info("   - Review GLEAMER_FINDING distribution")
+        else:
+            logger.info("✅ Found positive cases using CSV data!")
         
         logger.info("🎉 Fast mapping and dataset preparation completed!")
 
@@ -494,6 +585,11 @@ def main():
         dicom_path=args.dicom_path,
         output_dir=args.output_dir
     )
+    
+    # Load CSV data first
+    if not mapper.load_csv_data():
+        logger.error("Failed to load CSV data. Exiting.")
+        return
     
     # Find images
     mapper.find_gleamer_images()
