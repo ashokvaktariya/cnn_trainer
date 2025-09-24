@@ -47,12 +47,12 @@ class BinaryMedicalDataset(Dataset):
         """Process data for binary classification"""
         original_count = len(self.data)
         
-        # Check if we have the new format with gleamer_finding column
-        if 'gleamer_finding' in self.data.columns:
+        # Check if we have the new format with label column
+        if 'label' in self.data.columns:
             # Use the corrected dataset format
-            self.data = self.data[self.data['gleamer_finding'].isin(['POSITIVE', 'NEGATIVE'])]
-            self.label_column = 'gleamer_finding'
-            self.image_column = 'jpg_filename'
+            self.data = self.data[self.data['label'].isin(['POSITIVE', 'NEGATIVE'])]
+            self.label_column = 'label'
+            self.image_column = 'image_path'
             self.logger.info(f"✅ Using corrected dataset format")
         else:
             # Fallback to old format
