@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
 Data Preparation Script
-Processes filtered CSV data from team and creates 90/10 train/validation split
-Uses GLEAMER image data format
+Processes corrected CSV data and creates 90/10 train/validation split for CNN training
+Uses balanced corrected dataset with realistic fracture rates
 """
 
 import pandas as pd
 import numpy as np
 import os
 import logging
-import yaml
 import random
 
 # Try to import sklearn, fallback to manual split if not available
@@ -20,20 +19,16 @@ except ImportError:
     SKLEARN_AVAILABLE = False
     print("WARNING: sklearn not available. Using manual stratified split.")
 
-# Load YAML configuration
-with open('config_training.yaml', 'r') as f:
-    config = yaml.safe_load(f)
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataPreparator:
-    """Data preparation for train/validation split with GLEAMER format"""
+    """Data preparation for train/validation split for CNN training"""
     
     def __init__(self, csv_file=None):
-        self.csv_file = csv_file or "filtered_training_data.csv"
-        self.output_dir = config['data']['output_dir']
+        self.csv_file = csv_file or "test/data/aligned_filtered_data_no_docs_reports.csv"
+        self.output_dir = "test/data"
         self.data = None
         self.train_data = None
         self.val_data = None
@@ -41,14 +36,14 @@ class DataPreparator:
         logger.info(f"🔧 Initializing Data Preparator with {self.csv_file}")
     
     def load_data(self):
-        """Load CSV data from team"""
-        logger.info("📊 Loading filtered CSV data from team...")
+        """Load corrected CSV data"""
+        logger.info("📊 Loading corrected CSV data...")
         
         self.data = pd.read_csv(self.csv_file)
         logger.info(f"✅ Loaded {len(self.data)} records from CSV")
         
         # Validate required columns
-        required_columns = ['file_path', 'label']
+        required_columns = ['jpg_filename', 'gleamer_finding']
         missing_columns = [col for col in required_columns if col not in self.data.columns]
         if missing_columns:
             logger.error(f"❌ Missing required columns: {missing_columns}")
@@ -56,8 +51,8 @@ class DataPreparator:
             return None
         
         # Show distribution
-        if 'label' in self.data.columns:
-            label_counts = self.data['label'].value_counts()
+        if 'gleamer_finding' in self.data.columns:
+            label_counts = self.data['gleamer_finding'].value_counts()
             logger.info(f"📊 Label distribution:")
             for label, count in label_counts.items():
                 percentage = (count / len(self.data)) * 100
@@ -71,14 +66,17 @@ class DataPreparator:
         
         # Filter for binary classification (only POSITIVE/NEGATIVE)
         binary_data = self.data[
-            self.data['label'].isin(['POSITIVE', 'NEGATIVE'])
+            self.data['gleamer_finding'].isin(['POSITIVE', 'NEGATIVE'])
         ].copy()
         
         # Add binary labels
-        binary_data['binary_label'] = binary_data['label'].map({
+        binary_data['binary_label'] = binary_data['gleamer_finding'].map({
             'NEGATIVE': 0,
             'POSITIVE': 1
         })
+        
+        # Add file path column for CNN training
+        binary_data['file_path'] = binary_data['jpg_filename']
         
         logger.info(f"✅ Binary labels added:")
         logger.info(f"   Binary records: {len(binary_data):,}")
@@ -189,19 +187,24 @@ class DataPreparator:
         os.makedirs(self.output_dir, exist_ok=True)
         
         # Save training dataset
-        train_file = os.path.join(self.output_dir, "train_dataset.csv")
+        train_file = os.path.join(self.output_dir, "final_dataset_cnn_train.csv")
         self.train_data.to_csv(train_file, index=False)
         logger.info(f"💾 Training dataset saved to: {train_file}")
         
         # Save validation dataset
-        val_file = os.path.join(self.output_dir, "val_dataset.csv")
+        val_file = os.path.join(self.output_dir, "final_dataset_cnn_val.csv")
         self.val_data.to_csv(val_file, index=False)
         logger.info(f"💾 Validation dataset saved to: {val_file}")
+        
+        # Save combined dataset for reference
+        combined_file = os.path.join(self.output_dir, "final_dataset_cnn.csv")
+        self.data.to_csv(combined_file, index=False)
+        logger.info(f"💾 Combined dataset saved to: {combined_file}")
         
         # Save summary
         summary_file = os.path.join(self.output_dir, "dataset_summary.txt")
         with open(summary_file, 'w') as f:
-            f.write("DATASET SUMMARY\n")
+            f.write("CNN TRAINING DATASET SUMMARY\n")
             f.write("=" * 50 + "\n")
             f.write(f"Total records: {len(self.data):,}\n")
             f.write(f"Training records: {len(self.train_data):,}\n")
