@@ -27,7 +27,7 @@ class DataPreparator:
     """Data preparation for train/validation split for CNN training"""
     
     def __init__(self, csv_file=None):
-        self.csv_file = csv_file or "test/data/aligned_filtered_data_no_docs_reports.csv"
+        self.csv_file = csv_file or "final_dataset_cnn.csv"
         self.output_dir = "preprocessed"
         self.data = None
         self.train_data = None
