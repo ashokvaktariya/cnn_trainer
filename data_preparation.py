@@ -28,7 +28,7 @@ class DataPreparator:
     
     def __init__(self, csv_file=None):
         self.csv_file = csv_file or "test/data/aligned_filtered_data_no_docs_reports.csv"
-        self.output_dir = "test/data"
+        self.output_dir = "preprocessed"
         self.data = None
         self.train_data = None
         self.val_data = None
@@ -200,6 +200,19 @@ class DataPreparator:
         combined_file = os.path.join(self.output_dir, "final_dataset_cnn.csv")
         self.data.to_csv(combined_file, index=False)
         logger.info(f"💾 Combined dataset saved to: {combined_file}")
+        
+        # Also save files in root directory for easier access
+        root_train_file = "final_dataset_cnn_train.csv"
+        self.train_data.to_csv(root_train_file, index=False)
+        logger.info(f"💾 Training dataset also saved to root: {root_train_file}")
+        
+        root_val_file = "final_dataset_cnn_val.csv"
+        self.val_data.to_csv(root_val_file, index=False)
+        logger.info(f"💾 Validation dataset also saved to root: {root_val_file}")
+        
+        root_combined_file = "final_dataset_cnn.csv"
+        self.data.to_csv(root_combined_file, index=False)
+        logger.info(f"💾 Combined dataset also saved to root: {root_combined_file}")
         
         # Save summary
         summary_file = os.path.join(self.output_dir, "dataset_summary.txt")
