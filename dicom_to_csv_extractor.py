@@ -30,33 +30,36 @@ def extract_dicom_to_csv():
         print(f"Processing {i+1}/{len(dicom_files)}: {os.path.basename(file_path)}")
         
         try:
-            # Read DICOM file without pixel data for speed
-            ds = pydicom.dcmread(file_path, stop_before_pixels=True)
+            # Read DICOM file without pixel data for speed, force=True to handle missing headers
+            ds = pydicom.dcmread(file_path, stop_before_pixels=True, force=True)
             
-            # Extract common metadata
+            # Convert metadata to dictionary using the method you mentioned
+            metadata_dict = {elem.keyword: elem.value for elem in ds if elem.keyword}
+            
+            # Extract common metadata with fallback to empty string
             metadata = {
                 'file_path': file_path,
                 'file_name': os.path.basename(file_path),
                 'file_size': os.path.getsize(file_path),
-                'PatientID': str(ds.get('PatientID', '')),
-                'PatientName': str(ds.get('PatientName', '')),
-                'StudyInstanceUID': str(ds.get('StudyInstanceUID', '')),
-                'SeriesInstanceUID': str(ds.get('SeriesInstanceUID', '')),
-                'SOPInstanceUID': str(ds.get('SOPInstanceUID', '')),
-                'StudyDate': str(ds.get('StudyDate', '')),
-                'StudyTime': str(ds.get('StudyTime', '')),
-                'Modality': str(ds.get('Modality', '')),
-                'BodyPartExamined': str(ds.get('BodyPartExamined', '')),
-                'Manufacturer': str(ds.get('Manufacturer', '')),
-                'Rows': str(ds.get('Rows', '')),
-                'Columns': str(ds.get('Columns', '')),
-                'PixelSpacing': str(ds.get('PixelSpacing', '')),
-                'SliceThickness': str(ds.get('SliceThickness', '')),
-                'WindowCenter': str(ds.get('WindowCenter', '')),
-                'WindowWidth': str(ds.get('WindowWidth', '')),
-                'InstitutionName': str(ds.get('InstitutionName', '')),
-                'SeriesDescription': str(ds.get('SeriesDescription', '')),
-                'StudyDescription': str(ds.get('StudyDescription', ''))
+                'PatientID': str(metadata_dict.get('PatientID', '')),
+                'PatientName': str(metadata_dict.get('PatientName', '')),
+                'StudyInstanceUID': str(metadata_dict.get('StudyInstanceUID', '')),
+                'SeriesInstanceUID': str(metadata_dict.get('SeriesInstanceUID', '')),
+                'SOPInstanceUID': str(metadata_dict.get('SOPInstanceUID', '')),
+                'StudyDate': str(metadata_dict.get('StudyDate', '')),
+                'StudyTime': str(metadata_dict.get('StudyTime', '')),
+                'Modality': str(metadata_dict.get('Modality', '')),
+                'BodyPartExamined': str(metadata_dict.get('BodyPartExamined', '')),
+                'Manufacturer': str(metadata_dict.get('Manufacturer', '')),
+                'Rows': str(metadata_dict.get('Rows', '')),
+                'Columns': str(metadata_dict.get('Columns', '')),
+                'PixelSpacing': str(metadata_dict.get('PixelSpacing', '')),
+                'SliceThickness': str(metadata_dict.get('SliceThickness', '')),
+                'WindowCenter': str(metadata_dict.get('WindowCenter', '')),
+                'WindowWidth': str(metadata_dict.get('WindowWidth', '')),
+                'InstitutionName': str(metadata_dict.get('InstitutionName', '')),
+                'SeriesDescription': str(metadata_dict.get('SeriesDescription', '')),
+                'StudyDescription': str(metadata_dict.get('StudyDescription', ''))
             }
             
             all_data.append(metadata)
