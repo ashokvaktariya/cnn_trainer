@@ -43,7 +43,7 @@ class DataPreparator:
         logger.info(f"✅ Loaded {len(self.data)} records from CSV")
         
         # Validate required columns
-        required_columns = ['jpg_filename', 'gleamer_finding']
+        required_columns = ['image_path', 'label']
         missing_columns = [col for col in required_columns if col not in self.data.columns]
         if missing_columns:
             logger.error(f"❌ Missing required columns: {missing_columns}")
@@ -51,8 +51,8 @@ class DataPreparator:
             return None
         
         # Show distribution
-        if 'gleamer_finding' in self.data.columns:
-            label_counts = self.data['gleamer_finding'].value_counts()
+        if 'label' in self.data.columns:
+            label_counts = self.data['label'].value_counts()
             logger.info(f"📊 Label distribution:")
             for label, count in label_counts.items():
                 percentage = (count / len(self.data)) * 100
@@ -66,17 +66,17 @@ class DataPreparator:
         
         # Filter for binary classification (only POSITIVE/NEGATIVE)
         binary_data = self.data[
-            self.data['gleamer_finding'].isin(['POSITIVE', 'NEGATIVE'])
+            self.data['label'].isin(['POSITIVE', 'NEGATIVE'])
         ].copy()
         
         # Add binary labels
-        binary_data['binary_label'] = binary_data['gleamer_finding'].map({
+        binary_data['binary_label'] = binary_data['label'].map({
             'NEGATIVE': 0,
             'POSITIVE': 1
         })
         
         # Add file path column for CNN training
-        binary_data['file_path'] = binary_data['jpg_filename']
+        binary_data['file_path'] = binary_data['image_path']
         
         logger.info(f"✅ Binary labels added:")
         logger.info(f"   Binary records: {len(binary_data):,}")
