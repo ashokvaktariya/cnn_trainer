@@ -193,8 +193,8 @@ class BinaryMedicalDataset(Dataset):
         return {
             'image': image,
             'label': torch.tensor(label, dtype=torch.long),
-            'uid': image_filenames[0] if image_filenames else '',
-            'gleamer_finding': row['GLEAMER_FINDING']
+            'uid': image_filename,
+            'gleamer_finding': row[self.label_column] if hasattr(self, 'label_column') else row['label']
         }
 
 def get_transforms(mode='train'):
