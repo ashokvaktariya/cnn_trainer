@@ -3,14 +3,17 @@
 
 # Data Configuration
 data:
-  csv_path: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/processed_dicom_image_url_file.csv"
+  # Use the corrected CNN training datasets
+  train_csv: "final_dataset_cnn_train.csv"
+  val_csv: "final_dataset_cnn_val.csv"
+  test_csv: "final_dataset_cnn.csv"  # Use full dataset for testing
   image_root: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"
   output_dir: "./training_outputs/"
   
-  # Data splits
-  train_split: 0.7
-  val_split: 0.15
-  test_split: 0.15
+  # Data splits (not needed since we have pre-split files)
+  train_split: 0.9
+  val_split: 0.1
+  test_split: 0.0
   
   # Image preprocessing
   image_size: [600, 600]  # EfficientNet-B7 optimal size
@@ -27,20 +30,20 @@ model:
   
   # Class labels
   class_names: ["NEGATIVE", "POSITIVE"]
-  class_weights: [1.0, 3.0]  # Increased weight for positive class (fractures)
+  class_weights: [1.0, 2.5]  # Balanced weight for 12.2% positive rate
   
   # Advanced model settings
   use_focal_loss: true  # Better for imbalanced medical data
   focal_alpha: 0.25
   focal_gamma: 2.0
-  target_accuracy: 0.90  # Higher target
+  target_accuracy: 0.95  # Very high target for medical accuracy
 
 # Training Configuration
 training:
-  batch_size: 6  # Smaller batch for better gradient updates
-  num_epochs: 200  # More epochs for better convergence
-  learning_rate: 0.0001  # Lower LR for more stable training
-  weight_decay: 0.00005  # Reduced weight decay
+  batch_size: 8  # Optimized for H100 with corrected dataset
+  num_epochs: 150  # Balanced epochs for convergence
+  learning_rate: 0.0002  # Slightly higher LR for faster convergence
+  weight_decay: 0.0001  # Optimal weight decay
   
   # Optimizer
   optimizer: "adamw"

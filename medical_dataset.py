@@ -21,7 +21,13 @@ class BinaryMedicalDataset(Dataset):
     
     def __init__(self, csv_file=None, transform=None, mode='train', use_valid_images_only=True):
         # Use config defaults if not provided
-        csv_file = csv_file or config['data']['csv_path']
+        if csv_file is None:
+            if mode == 'train':
+                csv_file = config['data']['train_csv']
+            elif mode == 'val':
+                csv_file = config['data']['val_csv']
+            else:
+                csv_file = config['data']['test_csv']
         
         # Setup logging first
         logging.basicConfig(level=logging.INFO)
@@ -32,48 +38,43 @@ class BinaryMedicalDataset(Dataset):
         self.mode = mode
         self.use_valid_images_only = use_valid_images_only
         
-        # Filter data for binary classification
-        self._filter_data()
-        
-        # Split data for train/val/test
-        self._split_data()
+        # Process data for binary classification
+        self._process_data()
         
         self.logger.info(f"📊 {mode} dataset initialized with {len(self.data)} samples")
     
-    def _filter_data(self):
-        """Filter data for binary classification"""
+    def _process_data(self):
+        """Process data for binary classification"""
         original_count = len(self.data)
         
-        # Exclude DOUBT cases if configured
-        self.data = self.data[self.data['GLEAMER_FINDING'] != 'DOUBT']
-        self.logger.info(f"🚫 Excluded DOUBT cases: {original_count} → {len(self.data)}")
-        
-        # Filter valid images only if configured
-        if self.use_valid_images_only:
-            # This will be handled in __getitem__ method
-            pass
+        # Check if we have the new format with gleamer_finding column
+        if 'gleamer_finding' in self.data.columns:
+            # Use the corrected dataset format
+            self.data = self.data[self.data['gleamer_finding'].isin(['POSITIVE', 'NEGATIVE'])]
+            self.label_column = 'gleamer_finding'
+            self.image_column = 'jpg_filename'
+            self.logger.info(f"✅ Using corrected dataset format")
+        else:
+            # Fallback to old format
+            self.data = self.data[self.data['GLEAMER_FINDING'].isin(['POSITIVE', 'NEGATIVE'])]
+            self.label_column = 'GLEAMER_FINDING'
+            self.image_column = 'FILE_PATH'
+            self.logger.info(f"✅ Using legacy dataset format")
         
         # Map labels to binary classification
-        self.data = self.data[self.data['GLEAMER_FINDING'].isin(['POSITIVE', 'NEGATIVE'])]
         label_mapping = {"NEGATIVE": 0, "POSITIVE": 1}
-        self.data['label'] = self.data['GLEAMER_FINDING'].map(label_mapping)
+        self.data['label'] = self.data[self.label_column].map(label_mapping)
+        
+        # Show class distribution
+        class_counts = self.data[self.label_column].value_counts()
+        self.logger.info(f"📊 Class distribution:")
+        for class_name, count in class_counts.items():
+            percentage = (count / len(self.data)) * 100
+            self.logger.info(f"   {class_name}: {count:,} ({percentage:.1f}%)")
         
         self.logger.info(f"🏷️ Binary labels: POSITIVE={sum(self.data['label']==1)}, NEGATIVE={sum(self.data['label']==0)}")
     
-    def _split_data(self):
-        """Split data into train/val/test sets"""
-        total_len = len(self.data)
-        train_end = int((1 - config['data']['val_split'] - config['data']['test_split']) * total_len)
-        val_end = int((1 - config['data']['test_split']) * total_len)
-        
-        if self.mode == 'train':
-            self.data = self.data.iloc[:train_end]
-        elif self.mode == 'val':
-            self.data = self.data.iloc[train_end:val_end]
-        elif self.mode == 'test':
-            self.data = self.data.iloc[val_end:]
-        
-        self.logger.info(f"📊 {self.mode} split: {len(self.data)} samples")
+    # Note: _split_data method removed since we're using pre-split CSV files
     
     def _find_image_file(self, uid):
         """Find image file for given UID"""
@@ -151,49 +152,25 @@ class BinaryMedicalDataset(Dataset):
         # Get label
         label = int(row['label'])  # 0 for NEGATIVE, 1 for POSITIVE
         
-        # Parse download URLs to get image filenames
-        download_urls_string = str(row['download_urls'])
+        # Get image filename from the appropriate column
+        if hasattr(self, 'image_column'):
+            image_filename = str(row[self.image_column])
+        else:
+            # Fallback to old format
+            image_filename = str(row['FILE_PATH'])
+        
+        # Find image file
+        image_path = self._find_image_file_by_filename(image_filename)
+        
+        if image_path is None or not self._is_valid_image(image_path):
+            # No valid image found, skip this sample
+            return self.__getitem__((idx + 1) % len(self.data))
+        
+        # Load image
         try:
-            import json
-            # Try to parse as JSON array first
-            try:
-                download_urls = json.loads(download_urls_string)
-                if not isinstance(download_urls, list):
-                    download_urls = [download_urls]
-            except json.JSONDecodeError:
-                # Fallback to comma-separated parsing
-                if ',' in download_urls_string:
-                    download_urls = [url.strip().strip('"\'[]') for url in download_urls_string.split(',')]
-                else:
-                    download_urls = [download_urls_string.strip().strip('"\'[]')]
-            
-            # Extract filenames from URLs
-            image_filenames = []
-            for url in download_urls:
-                if url and url != 'nan':
-                    # Extract filename from URL
-                    filename = os.path.basename(url.strip())
-                    if filename:
-                        image_filenames.append(filename)
-            
-            # Find first valid image
-            image_path = None
-            for filename in image_filenames:
-                if filename:
-                    found_path = self._find_image_file_by_filename(filename)
-                    if found_path and self._is_valid_image(found_path):
-                        image_path = found_path
-                        break
-            
-            if image_path is None:
-                # No valid image found, skip this sample
-                return self.__getitem__((idx + 1) % len(self.data))
-            
-            # Load image
-            try:
-                with Image.open(image_path) as img:
-                    if img.mode != 'RGB':
-                        img = img.convert('RGB')
+            with Image.open(image_path) as img:
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
                     
                     # Convert to numpy array
                     image = np.array(img)
