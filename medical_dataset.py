@@ -61,9 +61,9 @@ class BinaryMedicalDataset(Dataset):
             self.image_column = 'FILE_PATH'
             self.logger.info(f"✅ Using legacy dataset format")
         
-        # Map labels to binary classification
+        # Map labels to binary classification (0 for NEGATIVE, 1 for POSITIVE)
         label_mapping = {"NEGATIVE": 0, "POSITIVE": 1}
-        self.data['label'] = self.data[self.label_column].map(label_mapping)
+        self.data['binary_label'] = self.data[self.label_column].map(label_mapping)
         
         # Show class distribution
         class_counts = self.data[self.label_column].value_counts()
@@ -72,7 +72,7 @@ class BinaryMedicalDataset(Dataset):
             percentage = (count / len(self.data)) * 100
             self.logger.info(f"   {class_name}: {count:,} ({percentage:.1f}%)")
         
-        self.logger.info(f"🏷️ Binary labels: POSITIVE={sum(self.data['label']==1)}, NEGATIVE={sum(self.data['label']==0)}")
+        self.logger.info(f"🏷️ Binary labels: POSITIVE={sum(self.data['binary_label']==1)}, NEGATIVE={sum(self.data['binary_label']==0)}")
     
     # Note: _split_data method removed since we're using pre-split CSV files
     
@@ -150,7 +150,7 @@ class BinaryMedicalDataset(Dataset):
         row = self.data.iloc[idx]
         
         # Get label
-        label = int(row['label'])  # 0 for NEGATIVE, 1 for POSITIVE
+        label = int(row['binary_label'])  # 0 for NEGATIVE, 1 for POSITIVE
         
         # Get image filename from the appropriate column
         if hasattr(self, 'image_column'):
@@ -282,9 +282,9 @@ def create_data_loaders(csv_path=None, val_csv_path=None, batch_size=None, num_w
     train_sampler = None
     if balance_classes:
         # Calculate class weights
-        class_counts = train_dataset.data['label'].value_counts().sort_index()
+        class_counts = train_dataset.data['binary_label'].value_counts().sort_index()
         class_weights = 1.0 / class_counts.values
-        sample_weights = [class_weights[label] for label in train_dataset.data['label']]
+        sample_weights = [class_weights[label] for label in train_dataset.data['binary_label']]
         
         train_sampler = WeightedRandomSampler(
             weights=sample_weights,
@@ -332,10 +332,10 @@ def get_dataset_stats():
     
     stats = {
         'total_samples': len(dataset),
-        'positive_samples': sum(dataset.data['label'] == 1),
-        'negative_samples': sum(dataset.data['label'] == 0),
-        'positive_ratio': sum(dataset.data['label'] == 1) / len(dataset),
-        'negative_ratio': sum(dataset.data['label'] == 0) / len(dataset)
+        'positive_samples': sum(dataset.data['binary_label'] == 1),
+        'negative_samples': sum(dataset.data['binary_label'] == 0),
+        'positive_ratio': sum(dataset.data['binary_label'] == 1) / len(dataset),
+        'negative_ratio': sum(dataset.data['binary_label'] == 0) / len(dataset)
     }
     
     return stats
