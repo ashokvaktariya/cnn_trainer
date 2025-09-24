@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Simple Data Preparation Script
-Splits training_dataset.csv into train/validation sets (85:15)
-NO FILTERING - Uses ALL data
+Data Preparation Script
+Processes filtered CSV data from team and creates 90/10 train/validation split
+Uses GLEAMER image data format
 """
 
 import pandas as pd
@@ -10,7 +10,15 @@ import numpy as np
 import os
 import logging
 import yaml
-from sklearn.model_selection import train_test_split
+import random
+
+# Try to import sklearn, fallback to manual split if not available
+try:
+    from sklearn.model_selection import train_test_split
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("WARNING: sklearn not available. Using manual stratified split.")
 
 # Load YAML configuration
 with open('config_training.yaml', 'r') as f:
@@ -21,10 +29,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataPreparator:
-    """Simple data preparation for train/validation split"""
+    """Data preparation for train/validation split with GLEAMER format"""
     
     def __init__(self, csv_file=None):
-        self.csv_file = csv_file or "training_dataset.csv"
+        self.csv_file = csv_file or "filtered_training_data.csv"
         self.output_dir = config['data']['output_dir']
         self.data = None
         self.train_data = None
@@ -33,19 +41,27 @@ class DataPreparator:
         logger.info(f"🔧 Initializing Data Preparator with {self.csv_file}")
     
     def load_data(self):
-        """Load CSV data"""
-        logger.info("📊 Loading CSV data...")
+        """Load CSV data from team"""
+        logger.info("📊 Loading filtered CSV data from team...")
         
         self.data = pd.read_csv(self.csv_file)
         logger.info(f"✅ Loaded {len(self.data)} records from CSV")
         
+        # Validate required columns
+        required_columns = ['file_path', 'label']
+        missing_columns = [col for col in required_columns if col not in self.data.columns]
+        if missing_columns:
+            logger.error(f"❌ Missing required columns: {missing_columns}")
+            logger.info(f"Available columns: {self.data.columns.tolist()}")
+            return None
+        
         # Show distribution
-        if 'GLEAMER_FINDING' in self.data.columns:
-            finding_counts = self.data['GLEAMER_FINDING'].value_counts()
-            logger.info(f"📊 GLEAMER_FINDING distribution:")
-            for finding, count in finding_counts.items():
+        if 'label' in self.data.columns:
+            label_counts = self.data['label'].value_counts()
+            logger.info(f"📊 Label distribution:")
+            for label, count in label_counts.items():
                 percentage = (count / len(self.data)) * 100
-                logger.info(f"   {finding}: {count:,} ({percentage:.1f}%)")
+                logger.info(f"   {label}: {count:,} ({percentage:.1f}%)")
         
         return self.data
     
@@ -53,13 +69,13 @@ class DataPreparator:
         """Add binary labels for classification"""
         logger.info("🏷️ Adding binary labels...")
         
-        # Filter for binary classification (exclude DOUBT)
+        # Filter for binary classification (only POSITIVE/NEGATIVE)
         binary_data = self.data[
-            self.data['GLEAMER_FINDING'].isin(['POSITIVE', 'NEGATIVE'])
+            self.data['label'].isin(['POSITIVE', 'NEGATIVE'])
         ].copy()
         
         # Add binary labels
-        binary_data['binary_label'] = binary_data['GLEAMER_FINDING'].map({
+        binary_data['binary_label'] = binary_data['label'].map({
             'NEGATIVE': 0,
             'POSITIVE': 1
         })
@@ -77,21 +93,62 @@ class DataPreparator:
         self.data = binary_data
         return self.data
     
-    def split_train_validation(self, train_ratio=0.85):
-        """Split data into training and validation sets (85:15)"""
-        logger.info("📊 Splitting data into train/validation sets...")
+    def _manual_stratified_split(self, train_ratio):
+        """Manual stratified split without sklearn"""
+        logger.info("📊 Using manual stratified split...")
+        
+        # Set random seed for reproducibility
+        random.seed(42)
+        
+        # Group by binary_label
+        positive_data = self.data[self.data['binary_label'] == 1]
+        negative_data = self.data[self.data['binary_label'] == 0]
+        
+        # Calculate split sizes
+        pos_train_size = int(len(positive_data) * train_ratio)
+        neg_train_size = int(len(negative_data) * train_ratio)
+        
+        # Shuffle and split positive data
+        pos_indices = positive_data.index.tolist()
+        random.shuffle(pos_indices)
+        pos_train_indices = pos_indices[:pos_train_size]
+        pos_val_indices = pos_indices[pos_train_size:]
+        
+        # Shuffle and split negative data
+        neg_indices = negative_data.index.tolist()
+        random.shuffle(neg_indices)
+        neg_train_indices = neg_indices[:neg_train_size]
+        neg_val_indices = neg_indices[neg_train_size:]
+        
+        # Combine train and validation indices
+        train_indices = pos_train_indices + neg_train_indices
+        val_indices = pos_val_indices + neg_val_indices
+        
+        # Create train and validation datasets
+        train_data = self.data.loc[train_indices].copy()
+        val_data = self.data.loc[val_indices].copy()
+        
+        return train_data, val_data
+    
+    def split_train_validation(self, train_ratio=0.9):
+        """Split data into training and validation sets (90:10)"""
+        logger.info("📊 Splitting data into train/validation sets (90:10)...")
         
         if self.data is None:
             logger.error("❌ No data available.")
             return None, None
         
         # Stratified split to maintain class distribution
-        train_data, val_data = train_test_split(
-            self.data,
-            test_size=1-train_ratio,
-            random_state=42,
-            stratify=self.data['binary_label']
-        )
+        if SKLEARN_AVAILABLE:
+            train_data, val_data = train_test_split(
+                self.data,
+                test_size=1-train_ratio,
+                random_state=42,
+                stratify=self.data['binary_label']
+            )
+        else:
+            # Manual stratified split
+            train_data, val_data = self._manual_stratified_split(train_ratio)
         
         # Reset indices
         train_data = train_data.reset_index(drop=True)
@@ -183,8 +240,8 @@ def main():
     # Add binary labels
     preparator.add_binary_labels()
     
-    # Split into train/validation (85:15)
-    preparator.split_train_validation(train_ratio=0.85)
+    # Split into train/validation (90:10)
+    preparator.split_train_validation(train_ratio=0.9)
     
     # Save datasets
     preparator.save_datasets()
