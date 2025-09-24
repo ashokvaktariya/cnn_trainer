@@ -437,10 +437,10 @@ def train_binary_classifier():
     # Print model summary
     get_model_summary(model)
     
-    # Create data loaders using new dataset paths
+    # Create data loaders using corrected dataset paths
     train_loader, val_loader, test_loader = create_data_loaders(
-        csv_path=os.path.join(config['data']['output_dir'], 'train_dataset.csv'),
-        val_csv_path=os.path.join(config['data']['output_dir'], 'val_dataset.csv'),
+        csv_path=config['data']['train_csv'],
+        val_csv_path=config['data']['val_csv'],
         batch_size=config['training']['batch_size'],
         num_workers=config['hardware']['num_workers'],
         balance_classes=False  # Use all data as provided
