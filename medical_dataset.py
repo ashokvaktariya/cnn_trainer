@@ -171,16 +171,12 @@ class BinaryMedicalDataset(Dataset):
             with Image.open(image_path) as img:
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
-                    
-                    # Convert to numpy array
-                    image = np.array(img)
-                    
-            except Exception as e:
-                self.logger.warning(f"⚠️ Error loading image {image_path}: {e}")
-                return self.__getitem__((idx + 1) % len(self.data))
-            
+                
+                # Convert to numpy array
+                image = np.array(img)
+                
         except Exception as e:
-            self.logger.warning(f"⚠️ Error processing UIDs for row {idx}: {e}")
+            self.logger.warning(f"⚠️ Error loading image {image_path}: {e}")
             return self.__getitem__((idx + 1) % len(self.data))
         
         # Apply transforms
