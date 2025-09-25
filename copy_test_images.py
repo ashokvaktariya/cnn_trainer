@@ -49,9 +49,18 @@ def copy_test_images(csv_file, source_root, target_folder, num_positive=20, num_
         logger.error("❌ No valid images found in validation dataset")
         return False
     
-    # Create target folder
+    # Create target folders
     os.makedirs(target_folder, exist_ok=True)
-    logger.info(f"📁 Created target folder: {target_folder}")
+    positive_folder = os.path.join(target_folder, "positive")
+    negative_folder = os.path.join(target_folder, "negative")
+    
+    os.makedirs(positive_folder, exist_ok=True)
+    os.makedirs(negative_folder, exist_ok=True)
+    
+    logger.info(f"📁 Created target folders:")
+    logger.info(f"   📁 Main folder: {target_folder}")
+    logger.info(f"   📈 Positive folder: {positive_folder}")
+    logger.info(f"   📉 Negative folder: {negative_folder}")
     
     # Sample exact number of positive images
     if len(positive_samples) >= num_positive:
@@ -67,59 +76,77 @@ def copy_test_images(csv_file, source_root, target_folder, num_positive=20, num_
         selected_negative = negative_samples
         logger.warning(f"⚠️ Only {len(negative_samples)} negative images available, using all")
     
-    # Combine selected samples
-    selected_samples = selected_positive + selected_negative
-    
-    logger.info(f"🎯 Selected {len(selected_samples)} images to copy:")
+    logger.info(f"🎯 Selected images to copy:")
     logger.info(f"   📈 Positive: {len(selected_positive)}")
     logger.info(f"   📉 Negative: {len(selected_negative)}")
     
-    # Copy images
-    copied_count = 0
-    failed_count = 0
+    # Copy positive images
+    copied_positive = 0
+    failed_positive = 0
     
-    for i, sample in enumerate(selected_samples, 1):
+    logger.info("📈 Copying positive images...")
+    for i, sample in enumerate(selected_positive, 1):
         try:
             source_path = sample['source_path']
-            target_path = os.path.join(target_folder, sample['filename'])
+            target_path = os.path.join(positive_folder, sample['filename'])
             
             # Copy file
             shutil.copy2(source_path, target_path)
-            copied_count += 1
+            copied_positive += 1
             
-            if i % 10 == 0:  # Log progress every 10 files
-                logger.info(f"📋 Copied {i}/{len(selected_samples)} images...")
+            if i % 5 == 0:  # Log progress every 5 files
+                logger.info(f"   📋 Copied {i}/{len(selected_positive)} positive images...")
                 
         except Exception as e:
-            logger.error(f"❌ Failed to copy {sample['filename']}: {e}")
-            failed_count += 1
+            logger.error(f"❌ Failed to copy positive {sample['filename']}: {e}")
+            failed_positive += 1
             continue
+    
+    # Copy negative images
+    copied_negative = 0
+    failed_negative = 0
+    
+    logger.info("📉 Copying negative images...")
+    for i, sample in enumerate(selected_negative, 1):
+        try:
+            source_path = sample['source_path']
+            target_path = os.path.join(negative_folder, sample['filename'])
+            
+            # Copy file
+            shutil.copy2(source_path, target_path)
+            copied_negative += 1
+            
+            if i % 5 == 0:  # Log progress every 5 files
+                logger.info(f"   📋 Copied {i}/{len(selected_negative)} negative images...")
+                
+        except Exception as e:
+            logger.error(f"❌ Failed to copy negative {sample['filename']}: {e}")
+            failed_negative += 1
+            continue
+    
+    # Calculate totals
+    copied_count = copied_positive + copied_negative
+    failed_count = failed_positive + failed_negative
     
     # Summary
     logger.info("=" * 60)
     logger.info("📊 COPY SUMMARY:")
-    logger.info(f"   🎯 Total selected: {len(selected_samples)}")
-    logger.info(f"   ✅ Successfully copied: {copied_count}")
-    logger.info(f"   ❌ Failed to copy: {failed_count}")
-    logger.info(f"   📁 Target folder: {target_folder}")
+    logger.info(f"   📈 Positive images: {copied_positive}/{len(selected_positive)} copied")
+    logger.info(f"   📉 Negative images: {copied_negative}/{len(selected_negative)} copied")
+    logger.info(f"   ✅ Total successfully copied: {copied_count}")
+    logger.info(f"   ❌ Total failed to copy: {failed_count}")
     
-    # Show label distribution
-    label_counts = {}
-    for sample in selected_samples:
-        label = sample['label']
-        label_counts[label] = label_counts.get(label, 0) + 1
-    
-    logger.info("📈 Label distribution:")
-    for label, count in label_counts.items():
-        percentage = (count / len(selected_samples)) * 100
-        logger.info(f"   {label}: {count} ({percentage:.1f}%)")
+    logger.info("📁 Folder structure:")
+    logger.info(f"   📁 {target_folder}/")
+    logger.info(f"   ├── 📈 positive/ ({copied_positive} images)")
+    logger.info(f"   └── 📉 negative/ ({copied_negative} images)")
     
     logger.info("=" * 60)
     
     if copied_count > 0:
         logger.info("🎉 Test images copied successfully!")
         logger.info(f"💡 You can now run: python runpod_testing.py")
-        logger.info(f"📊 Total images: {copied_count} (20 positive + 25 negative)")
+        logger.info(f"📊 Folder structure: test_images/positive/ and test_images/negative/")
         return True
     else:
         logger.error("❌ No images were copied successfully")
