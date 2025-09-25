@@ -15,10 +15,10 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def copy_test_images(csv_file, source_root, target_folder, num_samples=100):
-    """Copy sample images from dataset to test_images folder with balanced positive/negative"""
+def copy_test_images(csv_file, source_root, target_folder, num_positive=20, num_negative=25):
+    """Copy specific number of positive and negative images from validation dataset to test_images folder"""
     
-    logger.info(f"📊 Loading dataset from: {csv_file}")
+    logger.info(f"📊 Loading validation dataset from: {csv_file}")
     
     # Load CSV
     df = pd.read_csv(csv_file)
@@ -42,52 +42,37 @@ def copy_test_images(csv_file, source_root, target_folder, num_samples=100):
             else:  # NEGATIVE
                 negative_samples.append(sample)
     
-    logger.info(f"📁 Found {len(positive_samples)} positive images")
-    logger.info(f"📁 Found {len(negative_samples)} negative images")
+    logger.info(f"📁 Found {len(positive_samples)} positive images in validation set")
+    logger.info(f"📁 Found {len(negative_samples)} negative images in validation set")
     
     if len(positive_samples) == 0 and len(negative_samples) == 0:
-        logger.error("❌ No valid images found in dataset")
+        logger.error("❌ No valid images found in validation dataset")
         return False
     
     # Create target folder
     os.makedirs(target_folder, exist_ok=True)
     logger.info(f"📁 Created target folder: {target_folder}")
     
-    # Calculate balanced sampling
-    half_samples = num_samples // 2
-    remaining_samples = num_samples - (half_samples * 2)
-    
-    # Sample positive images
-    if len(positive_samples) >= half_samples:
-        selected_positive = random.sample(positive_samples, half_samples)
+    # Sample exact number of positive images
+    if len(positive_samples) >= num_positive:
+        selected_positive = random.sample(positive_samples, num_positive)
     else:
         selected_positive = positive_samples
-        logger.warning(f"⚠️ Only {len(positive_samples)} positive images available")
+        logger.warning(f"⚠️ Only {len(positive_samples)} positive images available, using all")
     
-    # Sample negative images
-    if len(negative_samples) >= half_samples:
-        selected_negative = random.sample(negative_samples, half_samples)
+    # Sample exact number of negative images
+    if len(negative_samples) >= num_negative:
+        selected_negative = random.sample(negative_samples, num_negative)
     else:
         selected_negative = negative_samples
-        logger.warning(f"⚠️ Only {len(negative_samples)} negative images available")
+        logger.warning(f"⚠️ Only {len(negative_samples)} negative images available, using all")
     
-    # Add remaining samples from the larger class
+    # Combine selected samples
     selected_samples = selected_positive + selected_negative
     
-    if remaining_samples > 0:
-        # Add remaining samples from the class with more available images
-        if len(positive_samples) > len(negative_samples):
-            remaining_positive = [s for s in positive_samples if s not in selected_positive]
-            if len(remaining_positive) >= remaining_samples:
-                selected_samples.extend(random.sample(remaining_positive, remaining_samples))
-        else:
-            remaining_negative = [s for s in negative_samples if s not in selected_negative]
-            if len(remaining_negative) >= remaining_samples:
-                selected_samples.extend(random.sample(remaining_negative, remaining_samples))
-    
     logger.info(f"🎯 Selected {len(selected_samples)} images to copy:")
-    logger.info(f"   📈 Positive: {len([s for s in selected_samples if s['binary_label'] == 1])}")
-    logger.info(f"   📉 Negative: {len([s for s in selected_samples if s['binary_label'] == 0])}")
+    logger.info(f"   📈 Positive: {len(selected_positive)}")
+    logger.info(f"   📉 Negative: {len(selected_negative)}")
     
     # Copy images
     copied_count = 0
@@ -134,6 +119,7 @@ def copy_test_images(csv_file, source_root, target_folder, num_samples=100):
     if copied_count > 0:
         logger.info("🎉 Test images copied successfully!")
         logger.info(f"💡 You can now run: python runpod_testing.py")
+        logger.info(f"📊 Total images: {copied_count} (20 positive + 25 negative)")
         return True
     else:
         logger.error("❌ No images were copied successfully")
@@ -141,17 +127,18 @@ def copy_test_images(csv_file, source_root, target_folder, num_samples=100):
 
 def main():
     """Main function"""
-    logger.info("🚀 Starting Test Images Copy Script")
+    logger.info("🚀 Starting Test Images Copy Script from Validation Dataset")
     
     # Configuration
-    csv_file = "final_dataset_cnn.csv"
+    csv_file = "preprocessed_balanced/balanced_dataset_cnn_val.csv"
     source_root = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"
     target_folder = "test_images"
-    num_samples = 100
+    num_positive = 20
+    num_negative = 25
     
     # Check if CSV exists
     if not os.path.exists(csv_file):
-        logger.error(f"❌ CSV file not found: {csv_file}")
+        logger.error(f"❌ Validation CSV file not found: {csv_file}")
         return False
     
     # Check if source root exists
@@ -161,7 +148,7 @@ def main():
         return False
     
     # Copy images
-    success = copy_test_images(csv_file, source_root, target_folder, num_samples)
+    success = copy_test_images(csv_file, source_root, target_folder, num_positive, num_negative)
     
     return success
 
