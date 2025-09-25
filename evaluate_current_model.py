@@ -268,7 +268,7 @@ def main():
     """Main evaluation function"""
     parser = argparse.ArgumentParser(description='Evaluate binary medical image classifier')
     parser.add_argument('--checkpoint', type=str, 
-                       default='checkpoints/binary_classifier_best.pth',
+                       default='/home/avaktariya/binary_classifier_20250924_131737',
                        help='Path to model checkpoint')
     parser.add_argument('--model-name', type=str, default='binary_classifier',
                        help='Model name for saving results')
