@@ -20,51 +20,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_model():
-    """Create EfficientNet-B7 model architecture matching training script"""
-    try:
-        from efficientnet_pytorch import EfficientNet
-    except ImportError:
-        logger.error("❌ efficientnet_pytorch not installed. Install with: pip install efficientnet-pytorch")
-        return None
+    """Create EfficientNet-B7 model architecture - copy from working inference_api.py"""
+    import torchvision.models as models
     
-    # Create BinaryEfficientNet model exactly like training
-    class BinaryEfficientNet(torch.nn.Module):
-        def __init__(self, num_classes=2, dropout_rate=0.3, pretrained=True, **kwargs):
-            super().__init__()
-            
-            # Use EfficientNet-B7 backbone without classifier
-            self.backbone = EfficientNet.from_pretrained(
-                "efficientnet-b7",
-                num_classes=1000,  # Use default ImageNet classes
-                dropout_rate=dropout_rate
-            )
-            
-            # Remove the original classifier
-            self.backbone._fc = torch.nn.Identity()
-            
-            # Get feature dimension from EfficientNet-B7
-            feature_dim = 2560  # EfficientNet-B7 feature dimension
-            
-            # Binary classification head
-            self.classifier = torch.nn.Sequential(
-                torch.nn.AdaptiveAvgPool2d((1, 1)),
-                torch.nn.Flatten(),
-                torch.nn.Dropout(dropout_rate),
-                torch.nn.Linear(feature_dim, 512),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(dropout_rate),
-                torch.nn.Linear(512, 256),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(dropout_rate),
-                torch.nn.Linear(256, num_classes)
-            )
-        
-        def forward(self, x):
-            # Extract features from backbone
-            features = self.backbone.extract_features(x)
-            return self.classifier(features)
+    # Load EfficientNet-B7 backbone
+    backbone = models.efficientnet_b7(pretrained=False)
     
-    return BinaryEfficientNet(num_classes=2, dropout_rate=0.3, pretrained=True)
+    # Modify classifier for binary classification
+    num_features = backbone.classifier[1].in_features
+    backbone.classifier = torch.nn.Sequential(
+        torch.nn.Dropout(0.3),
+        torch.nn.Linear(num_features, 2)
+    )
+    
+    return backbone
 
 def load_model_from_checkpoint(checkpoint_path):
     """Load model from checkpoint directory"""
@@ -104,37 +73,20 @@ def load_model_from_checkpoint(checkpoint_path):
     return model, class_names
 
 def preprocess_image(image_path, input_size=600):
-    """Preprocess image for inference - matches training preprocessing exactly"""
+    """Preprocess image for inference - copy from working inference_api.py"""
     try:
-        # Load image EXACTLY like training
-        with Image.open(image_path) as img:
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
-            
-            # Convert to numpy array like training
-            image = np.array(img)
+        # Read and process image - simple approach like inference_api.py
+        image = Image.open(image_path).convert('RGB')
         
-        logger.info(f"🔍 Image shape after numpy: {image.shape}")
-        
-        # Convert numpy array to PIL Image for torchvision transforms (EXACTLY like training)
-        if len(image.shape) == 3 and image.shape[2] == 3:  # RGB image
-            image = Image.fromarray(image.astype(np.uint8), 'RGB')
-        else:  # Grayscale image
-            image = Image.fromarray(image.astype(np.uint8), 'L')
-        
-        logger.info(f"🔍 PIL image mode: {image.mode}, size: {image.size}")
-        
-        # Define transforms EXACTLY like training (validation mode)
+        # Define transforms - copy from inference_api.py
         transform = transforms.Compose([
-            transforms.Resize((input_size, input_size)),  # Use tuple like training
+            transforms.Resize((input_size, input_size)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         
         # Apply transforms
         image_tensor = transform(image).unsqueeze(0)
-        
-        logger.info(f"🔍 Final tensor shape: {image_tensor.shape}")
         
         return image_tensor, image
         
