@@ -113,11 +113,15 @@ def preprocess_image(image_path, input_size=600):
             # Convert to numpy array like training
             image = np.array(img)
         
+        logger.info(f"🔍 Image shape after numpy: {image.shape}")
+        
         # Convert numpy array to PIL Image for torchvision transforms (EXACTLY like training)
         if len(image.shape) == 3 and image.shape[2] == 3:  # RGB image
             image = Image.fromarray(image.astype(np.uint8), 'RGB')
         else:  # Grayscale image
             image = Image.fromarray(image.astype(np.uint8), 'L')
+        
+        logger.info(f"🔍 PIL image mode: {image.mode}, size: {image.size}")
         
         # Define transforms EXACTLY like training (validation mode)
         transform = transforms.Compose([
@@ -128,6 +132,8 @@ def preprocess_image(image_path, input_size=600):
         
         # Apply transforms
         image_tensor = transform(image).unsqueeze(0)
+        
+        logger.info(f"🔍 Final tensor shape: {image_tensor.shape}")
         
         return image_tensor, image
         
