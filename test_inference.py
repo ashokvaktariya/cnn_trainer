@@ -19,19 +19,49 @@ logger = logging.getLogger(__name__)
 
 def create_model():
     """Create EfficientNet-B7 model architecture matching training script"""
-    import torchvision.models as models
+    try:
+        from efficientnet_pytorch import EfficientNet
+    except ImportError:
+        logger.error("❌ efficientnet_pytorch not installed. Install with: pip install efficientnet-pytorch")
+        return None
     
-    # Load EfficientNet-B7 backbone with pretrained weights
-    backbone = models.efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+    # Create BinaryEfficientNet model exactly like training
+    class BinaryEfficientNet(torch.nn.Module):
+        def __init__(self, num_classes=2, dropout_rate=0.3, pretrained=True, **kwargs):
+            super().__init__()
+            
+            # Use EfficientNet-B7 backbone without classifier
+            self.backbone = EfficientNet.from_pretrained(
+                "efficientnet-b7",
+                num_classes=1000,  # Use default ImageNet classes
+                dropout_rate=dropout_rate
+            )
+            
+            # Remove the original classifier
+            self.backbone._fc = torch.nn.Identity()
+            
+            # Get feature dimension from EfficientNet-B7
+            feature_dim = 2560  # EfficientNet-B7 feature dimension
+            
+            # Binary classification head
+            self.classifier = torch.nn.Sequential(
+                torch.nn.AdaptiveAvgPool2d((1, 1)),
+                torch.nn.Flatten(),
+                torch.nn.Dropout(dropout_rate),
+                torch.nn.Linear(feature_dim, 512),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(dropout_rate),
+                torch.nn.Linear(512, 256),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(dropout_rate),
+                torch.nn.Linear(256, num_classes)
+            )
+        
+        def forward(self, x):
+            features = self.backbone(x)
+            return self.classifier(features)
     
-    # Modify classifier for binary classification
-    num_features = backbone.classifier[1].in_features
-    backbone.classifier = torch.nn.Sequential(
-        torch.nn.Dropout(0.3),
-        torch.nn.Linear(num_features, 2)
-    )
-    
-    return backbone
+    return BinaryEfficientNet(num_classes=2, dropout_rate=0.3, pretrained=True)
 
 def load_model_from_checkpoint(checkpoint_path):
     """Load model from checkpoint directory"""
