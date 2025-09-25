@@ -65,7 +65,7 @@ training:
 # Hardware Configuration
 hardware:
   device: "cuda"
-  num_workers: 8
+  num_workers: 4  # Optimized for balanced dataset
   pin_memory: true
   mixed_precision: true
   
