@@ -30,29 +30,29 @@ model:
   
   # Class labels
   class_names: ["NEGATIVE", "POSITIVE"]
-  class_weights: [1.0, 1.2]  # Balanced weight for ~40.5% positive rate
+  class_weights: [1.0, 1.5]  # Higher weight for positive class (40.5% positive rate)
   
   # Advanced model settings
-  use_focal_loss: true  # Better for imbalanced medical data
+  use_focal_loss: false  # Use weighted cross-entropy instead
   focal_alpha: 0.25
   focal_gamma: 2.0
-  target_accuracy: 0.95  # Very high target for medical accuracy
+  target_accuracy: 0.90  # Realistic target for medical accuracy
 
 # Training Configuration
 training:
-  batch_size: 16  # Optimized for balanced dataset (smaller, more balanced)
-  num_epochs: 150  # Balanced epochs for convergence
-  learning_rate: 0.0002  # Slightly higher LR for faster convergence
+  batch_size: 32  # Increased batch size for better gradient estimates
+  num_epochs: 200  # More epochs for better convergence
+  learning_rate: 0.0001  # Lower LR for better fine-tuning
   weight_decay: 0.0001  # Optimal weight decay
   
   # Optimizer
   optimizer: "adamw"
   scheduler: "cosine"
-  warmup_epochs: 20  # Longer warmup
+  warmup_epochs: 30  # Longer warmup for stability
   
   # Early stopping
-  patience: 30  # More patience for better convergence
-  min_delta: 0.0005  # Smaller improvement threshold
+  patience: 40  # More patience for better convergence
+  min_delta: 0.001  # Reasonable improvement threshold
   
   # Mixed precision
   use_amp: true
@@ -65,7 +65,7 @@ training:
 # Hardware Configuration
 hardware:
   device: "cuda"
-  num_workers: 4  # Optimized for balanced dataset
+  num_workers: 8  # Increased for larger batch size
   pin_memory: true
   mixed_precision: true
   
