@@ -18,11 +18,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_model():
-    """Create EfficientNet-B7 model architecture"""
+    """Create EfficientNet-B7 model architecture matching training script"""
     import torchvision.models as models
     
-    # Load EfficientNet-B7 backbone
-    backbone = models.efficientnet_b7(pretrained=False)
+    # Load EfficientNet-B7 backbone with pretrained weights
+    backbone = models.efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
     
     # Modify classifier for binary classification
     num_features = backbone.classifier[1].in_features
