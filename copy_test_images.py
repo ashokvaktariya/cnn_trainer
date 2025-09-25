@@ -16,28 +16,36 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def copy_test_images(csv_file, source_root, target_folder, num_samples=100):
-    """Copy sample images from dataset to test_images folder"""
+    """Copy sample images from dataset to test_images folder with balanced positive/negative"""
     
     logger.info(f"📊 Loading dataset from: {csv_file}")
     
     # Load CSV
     df = pd.read_csv(csv_file)
     
-    # Filter for valid image paths
-    valid_samples = []
+    # Filter for valid image paths and separate by class
+    positive_samples = []
+    negative_samples = []
+    
     for idx, row in df.iterrows():
         image_path = os.path.join(source_root, row['image_path'])
         if os.path.exists(image_path):
-            valid_samples.append({
+            sample = {
                 'source_path': image_path,
                 'filename': os.path.basename(row['image_path']),
                 'label': row['label'],
                 'binary_label': row['binary_label']
-            })
+            }
+            
+            if row['binary_label'] == 1:  # POSITIVE
+                positive_samples.append(sample)
+            else:  # NEGATIVE
+                negative_samples.append(sample)
     
-    logger.info(f"📁 Found {len(valid_samples)} valid images in dataset")
+    logger.info(f"📁 Found {len(positive_samples)} positive images")
+    logger.info(f"📁 Found {len(negative_samples)} negative images")
     
-    if len(valid_samples) == 0:
+    if len(positive_samples) == 0 and len(negative_samples) == 0:
         logger.error("❌ No valid images found in dataset")
         return False
     
@@ -45,14 +53,41 @@ def copy_test_images(csv_file, source_root, target_folder, num_samples=100):
     os.makedirs(target_folder, exist_ok=True)
     logger.info(f"📁 Created target folder: {target_folder}")
     
-    # Sample random images
-    if len(valid_samples) >= num_samples:
-        selected_samples = random.sample(valid_samples, num_samples)
-    else:
-        selected_samples = valid_samples
-        logger.warning(f"⚠️ Only {len(valid_samples)} images available, copying all")
+    # Calculate balanced sampling
+    half_samples = num_samples // 2
+    remaining_samples = num_samples - (half_samples * 2)
     
-    logger.info(f"🎯 Selected {len(selected_samples)} images to copy")
+    # Sample positive images
+    if len(positive_samples) >= half_samples:
+        selected_positive = random.sample(positive_samples, half_samples)
+    else:
+        selected_positive = positive_samples
+        logger.warning(f"⚠️ Only {len(positive_samples)} positive images available")
+    
+    # Sample negative images
+    if len(negative_samples) >= half_samples:
+        selected_negative = random.sample(negative_samples, half_samples)
+    else:
+        selected_negative = negative_samples
+        logger.warning(f"⚠️ Only {len(negative_samples)} negative images available")
+    
+    # Add remaining samples from the larger class
+    selected_samples = selected_positive + selected_negative
+    
+    if remaining_samples > 0:
+        # Add remaining samples from the class with more available images
+        if len(positive_samples) > len(negative_samples):
+            remaining_positive = [s for s in positive_samples if s not in selected_positive]
+            if len(remaining_positive) >= remaining_samples:
+                selected_samples.extend(random.sample(remaining_positive, remaining_samples))
+        else:
+            remaining_negative = [s for s in negative_samples if s not in selected_negative]
+            if len(remaining_negative) >= remaining_samples:
+                selected_samples.extend(random.sample(remaining_negative, remaining_samples))
+    
+    logger.info(f"🎯 Selected {len(selected_samples)} images to copy:")
+    logger.info(f"   📈 Positive: {len([s for s in selected_samples if s['binary_label'] == 1])}")
+    logger.info(f"   📉 Negative: {len([s for s in selected_samples if s['binary_label'] == 0])}")
     
     # Copy images
     copied_count = 0
