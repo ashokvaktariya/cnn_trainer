@@ -163,32 +163,38 @@ def predict_image(model, image_tensor, class_names):
             "probabilities": prob_dict
         }
 
-def get_random_images(image_root, num_samples=8):
-    """Get random images from the mount directory"""
-    logger.info(f"📁 Searching for images in: {image_root}")
+def get_random_images_from_csv(csv_file, image_root, num_samples=8):
+    """Get random images from CSV dataset"""
+    logger.info(f"📊 Loading dataset from: {csv_file}")
     
-    # Find all image files
-    image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff']
-    image_files = []
+    # Load CSV
+    df = pd.read_csv(csv_file)
     
-    for ext in image_extensions:
-        pattern = os.path.join(image_root, '**', ext)
-        image_files.extend(glob.glob(pattern, recursive=True))
+    # Filter for valid image paths
+    valid_samples = []
+    for idx, row in df.iterrows():
+        image_path = os.path.join(image_root, row['image_path'])
+        if os.path.exists(image_path):
+            valid_samples.append({
+                'image_path': image_path,
+                'label': row['label'],
+                'binary_label': row['binary_label']
+            })
     
-    logger.info(f"📊 Found {len(image_files)} images")
+    logger.info(f"📁 Found {len(valid_samples)} valid images from CSV")
     
-    if len(image_files) == 0:
-        logger.error("❌ No images found in the directory")
+    if len(valid_samples) == 0:
+        logger.error("❌ No valid images found in CSV dataset")
         return []
     
     # Sample random images
-    if len(image_files) >= num_samples:
-        selected_images = random.sample(image_files, num_samples)
+    if len(valid_samples) >= num_samples:
+        selected_samples = random.sample(valid_samples, num_samples)
     else:
-        selected_images = image_files
+        selected_samples = valid_samples
     
-    logger.info(f"🎯 Selected {len(selected_images)} images for testing")
-    return selected_images
+    logger.info(f"🎯 Selected {len(selected_samples)} images for testing")
+    return selected_samples
 
 def run_simple_inference():
     """Main inference function"""
@@ -196,12 +202,17 @@ def run_simple_inference():
     
     # Configuration
     checkpoint_path = "/home/avaktariya/binary_classifier_20250924_131737"
+    csv_file = "final_dataset_cnn.csv"  # Use final dataset
     image_root = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"
     num_samples = 8  # Test 8 samples
     
     # Check if paths exist
     if not os.path.exists(checkpoint_path):
         logger.error(f"❌ Checkpoint path not found: {checkpoint_path}")
+        return False
+    
+    if not os.path.exists(csv_file):
+        logger.error(f"❌ CSV file not found: {csv_file}")
         return False
     
     if not os.path.exists(image_root):
@@ -214,17 +225,24 @@ def run_simple_inference():
         logger.error("❌ Failed to load model")
         return False
     
-    # Get random images
-    test_images = get_random_images(image_root, num_samples)
-    if not test_images:
-        logger.error("❌ No test images found")
+    # Get random images from CSV dataset
+    test_samples = get_random_images_from_csv(csv_file, image_root, num_samples)
+    if not test_samples:
+        logger.error("❌ No test samples found")
         return False
     
     # Run inference
-    logger.info("🔍 Running inference on random images...")
+    logger.info("🔍 Running inference on CSV dataset samples...")
     logger.info("=" * 80)
     
-    for i, image_path in enumerate(test_images, 1):
+    correct_predictions = 0
+    total_predictions = len(test_samples)
+    
+    for i, sample in enumerate(test_samples, 1):
+        image_path = sample['image_path']
+        true_label = sample['label']
+        true_binary = sample['binary_label']
+        
         try:
             # Preprocess image
             image_tensor, image = preprocess_image(image_path)
@@ -232,22 +250,42 @@ def run_simple_inference():
             # Run prediction
             result = predict_image(model, image_tensor, class_names)
             
+            # Check if prediction is correct
+            is_correct = (result['predicted_class'] == true_binary)
+            if is_correct:
+                correct_predictions += 1
+            
             # Display results
-            logger.info(f"📸 Sample {i}/{len(test_images)}:")
+            status = "✅" if is_correct else "❌"
+            logger.info(f"{status} Sample {i}/{total_predictions}:")
             logger.info(f"   📁 Image: {os.path.basename(image_path)}")
+            logger.info(f"   🏷️  True Label: {true_label}")
             logger.info(f"   🔮 Predicted: {result['predicted_label']}")
             logger.info(f"   📊 Confidence: {result['confidence']:.3f}")
             logger.info(f"   📈 Probabilities: NEGATIVE={result['probabilities']['negative']:.3f}, POSITIVE={result['probabilities']['positive']:.3f}")
+            logger.info(f"   {'✅ CORRECT' if is_correct else '❌ INCORRECT'}")
             logger.info("-" * 60)
             
         except Exception as e:
-            logger.error(f"❌ Error processing image {i}: {e}")
+            logger.error(f"❌ Error processing sample {i}: {e}")
             continue
     
+    # Final results
+    accuracy = (correct_predictions / total_predictions) * 100
     logger.info("=" * 80)
-    logger.info("✅ Simple inference test completed!")
-    logger.info(f"🎯 Tested {len(test_images)} images")
+    logger.info("📊 FINAL RESULTS:")
+    logger.info(f"   🎯 Total Samples: {total_predictions}")
+    logger.info(f"   ✅ Correct Predictions: {correct_predictions}")
+    logger.info(f"   ❌ Incorrect Predictions: {total_predictions - correct_predictions}")
+    logger.info(f"   📈 Accuracy: {accuracy:.2f}%")
     logger.info("=" * 80)
+    
+    if accuracy >= 80:
+        logger.info("🎉 Model performance looks good!")
+    elif accuracy >= 60:
+        logger.info("⚠️ Model performance is moderate")
+    else:
+        logger.info("🚨 Model performance needs improvement")
     
     return True
 
