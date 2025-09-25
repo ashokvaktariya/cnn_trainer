@@ -3,10 +3,10 @@
 
 # Data Configuration
 data:
-  # Use the corrected CNN training datasets
-  train_csv: "final_dataset_cnn_train.csv"
-  val_csv: "final_dataset_cnn_val.csv"
-  test_csv: "final_dataset_cnn.csv"  # Use full dataset for testing
+  # Use the balanced CNN training datasets (6k negative + all positive)
+  train_csv: "balanced_dataset_cnn_train.csv"
+  val_csv: "balanced_dataset_cnn_val.csv"
+  test_csv: "balanced_dataset_cnn.csv"  # Use balanced dataset for testing
   image_root: "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"
   output_dir: "./training_outputs/"
   
@@ -30,7 +30,7 @@ model:
   
   # Class labels
   class_names: ["NEGATIVE", "POSITIVE"]
-  class_weights: [1.0, 2.5]  # Balanced weight for 12.2% positive rate
+  class_weights: [1.0, 1.2]  # Balanced weight for ~40.5% positive rate
   
   # Advanced model settings
   use_focal_loss: true  # Better for imbalanced medical data
@@ -40,7 +40,7 @@ model:
 
 # Training Configuration
 training:
-  batch_size: 8  # Optimized for H100 with corrected dataset
+  batch_size: 16  # Optimized for balanced dataset (smaller, more balanced)
   num_epochs: 150  # Balanced epochs for convergence
   learning_rate: 0.0002  # Slightly higher LR for faster convergence
   weight_decay: 0.0001  # Optimal weight decay

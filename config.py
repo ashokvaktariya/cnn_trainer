@@ -19,10 +19,10 @@ GLEAMER_DATA_ROOT = "/sharedata01/CNN_data/gleamer/gleamer"
 DATA_ROOT = "."  # Current directory
 OUTPUT_ROOT = os.path.join(DATA_ROOT, "outputs")
 
-# Dataset paths - use current dataset structure
-CSV_FILE = "final_dataset_cnn.csv"  # Current dataset file
-TRAIN_CSV = "final_dataset_cnn_train.csv"  # Training split
-VAL_CSV = "final_dataset_cnn_val.csv"  # Validation split
+# Dataset paths - use balanced dataset structure
+CSV_FILE = "balanced_dataset_cnn.csv"  # Balanced dataset file
+TRAIN_CSV = "balanced_dataset_cnn_train.csv"  # Training split
+VAL_CSV = "balanced_dataset_cnn_val.csv"  # Validation split
 EXISTING_IMAGES_DIR = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"  # Where images are stored
 
 print(f"✅ Using server data path: {DATA_ROOT}")
@@ -70,7 +70,7 @@ MODEL_CONFIGS = {
 # Binary Classification Training Configuration
 TRAINING_CONFIG = {
     # Data parameters
-    "batch_size": 8,  # Optimized for current setup
+    "batch_size": 16,  # Optimized for balanced dataset (smaller, more balanced)
     "num_workers": 4,  # Current server setup
     "use_valid_images_only": True,  # Filter out blank images
     "exclude_doubt_cases": True,  # Remove DOUBT cases
@@ -83,7 +83,7 @@ TRAINING_CONFIG = {
     
     # Class balancing
     "balance_classes": True,  # Balance POSITIVE/NEGATIVE
-    "class_weights": [1.0, 2.5],  # Weight POSITIVE more for 12.2% positive rate
+    "class_weights": [1.0, 1.2],  # Weight POSITIVE slightly more for ~40.5% positive rate
     "augment_positive_class": True,  # Heavy augmentation for POSITIVE
     
     # Optimization

@@ -1,0 +1,15 @@
+BALANCED CNN TRAINING DATASET SUMMARY
+==================================================
+Total records: 10,077
+Training records: 9,069
+Validation records: 1,008
+Train ratio: 90.0%
+Val ratio: 10.0%
+
+TRAINING SET DISTRIBUTION:
+  NEGATIVE: 5,400 (59.5%)
+  POSITIVE: 3,669 (40.5%)
+
+VALIDATION SET DISTRIBUTION:
+  NEGATIVE: 600 (59.5%)
+  POSITIVE: 408 (40.5%)
