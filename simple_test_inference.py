@@ -60,7 +60,8 @@ def create_model():
             )
         
         def forward(self, x):
-            features = self.backbone(x)
+            # Extract features from backbone
+            features = self.backbone.extract_features(x)
             return self.classifier(features)
     
     return BinaryEfficientNet(num_classes=2, dropout_rate=0.3, pretrained=True)
