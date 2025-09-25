@@ -124,19 +124,39 @@ def load_model_from_checkpoint(checkpoint_path):
 
 def preprocess_image(image_path, input_size=(600, 600)):
     """Preprocess image for inference"""
-    # Load image
-    image = Image.open(image_path).convert('RGB')
-    
-    # Define transforms
-    transform = transforms.Compose([
-        transforms.Resize(input_size),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-    
-    # Apply transforms
-    image_tensor = transform(image).unsqueeze(0)
-    return image_tensor, image
+    try:
+        # Load image and ensure it's RGB
+        image = Image.open(image_path)
+        
+        # Convert to RGB if needed (handles grayscale, RGBA, etc.)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Define transforms
+        transform = transforms.Compose([
+            transforms.Resize(input_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        
+        # Apply transforms
+        image_tensor = transform(image).unsqueeze(0)
+        
+        # Verify tensor shape
+        if image_tensor.shape[1] != 3:
+            logger.warning(f"⚠️ Image has {image_tensor.shape[1]} channels, converting to RGB")
+            # Convert grayscale to RGB by repeating the channel
+            if image_tensor.shape[1] == 1:
+                image_tensor = image_tensor.repeat(1, 3, 1, 1)
+            else:
+                # Take first 3 channels if more than 3
+                image_tensor = image_tensor[:, :3, :, :]
+        
+        return image_tensor, image
+        
+    except Exception as e:
+        logger.error(f"❌ Error preprocessing image {image_path}: {e}")
+        raise e
 
 def predict_image(model, image_tensor, class_names):
     """Run inference on image tensor"""
