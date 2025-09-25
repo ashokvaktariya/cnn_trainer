@@ -16,12 +16,14 @@ SERVER_DATA_ROOT = "/sharedata01/CNN_data"
 GLEAMER_DATA_ROOT = "/sharedata01/CNN_data/gleamer/gleamer"
 
 # Output directories (define first)
-DATA_ROOT = SERVER_DATA_ROOT  # For our processed data
-OUTPUT_ROOT = os.path.join(DATA_ROOT, "medical_classification")
+DATA_ROOT = "."  # Current directory
+OUTPUT_ROOT = os.path.join(DATA_ROOT, "outputs")
 
-# Dataset paths - use preprocessed data
-CSV_FILE = os.path.join(OUTPUT_ROOT, "preprocessed", "binary_medical_dataset.csv")
-EXISTING_IMAGES_DIR = GLEAMER_DATA_ROOT  # Where images are already stored
+# Dataset paths - use current dataset structure
+CSV_FILE = "final_dataset_cnn.csv"  # Current dataset file
+TRAIN_CSV = "final_dataset_cnn_train.csv"  # Training split
+VAL_CSV = "final_dataset_cnn_val.csv"  # Validation split
+EXISTING_IMAGES_DIR = "/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/"  # Where images are stored
 
 print(f"✅ Using server data path: {DATA_ROOT}")
 print(f"✅ Using existing images from: {EXISTING_IMAGES_DIR}")
@@ -68,20 +70,20 @@ MODEL_CONFIGS = {
 # Binary Classification Training Configuration
 TRAINING_CONFIG = {
     # Data parameters
-    "batch_size": 32,  # Optimized for binary classification
-    "num_workers": 8,  # H200 server can handle more workers
+    "batch_size": 8,  # Optimized for current setup
+    "num_workers": 4,  # Current server setup
     "use_valid_images_only": True,  # Filter out blank images
     "exclude_doubt_cases": True,  # Remove DOUBT cases
     
     # Training parameters
-    "num_epochs": 50,
-    "learning_rate": 1e-4,
-    "weight_decay": 1e-5,
+    "num_epochs": 150,
+    "learning_rate": 0.0002,
+    "weight_decay": 0.0001,
     "warmup_epochs": 5,
     
     # Class balancing
     "balance_classes": True,  # Balance POSITIVE/NEGATIVE
-    "class_weights": [1.0, 1.2],  # Weight NEGATIVE slightly more
+    "class_weights": [1.0, 2.5],  # Weight POSITIVE more for 12.2% positive rate
     "augment_positive_class": True,  # Heavy augmentation for POSITIVE
     
     # Optimization
@@ -180,9 +182,9 @@ BINARY_CONFIG = {
     "exclude_labels": ["DOUBT"],  # Exclude uncertain cases
     
     # Performance targets
-    "target_accuracy": 0.85,  # 85% accuracy target
-    "target_precision": 0.80,  # 80% precision for POSITIVE
-    "target_recall": 0.80,    # 80% recall for POSITIVE
+    "target_accuracy": 0.95,  # 95% accuracy target
+    "target_precision": 0.90,  # 90% precision for POSITIVE
+    "target_recall": 0.90,    # 90% recall for POSITIVE
     
     # Inference settings
     "confidence_threshold": 0.5,

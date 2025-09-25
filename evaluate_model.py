@@ -29,15 +29,38 @@ import logging
 
 from medical_dataset import create_data_loaders, get_dataset_stats
 from models import create_model
-from train_models import BinaryMedicalTrainer
-from config import (
-    TRAINING_CONFIG, GPU_CONFIG, CHECKPOINTS_DIR, RESULTS_DIR,
-    MODEL_CONFIGS, BINARY_CONFIG
-)
+import yaml
+from pathlib import Path
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load configuration
+def load_config():
+    """Load configuration from YAML file"""
+    config_path = Path('config_training.yaml')
+    if config_path.exists():
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f)
+    else:
+        # Fallback configuration
+        return {
+            'data': {
+                'train_csv': 'final_dataset_cnn_train.csv',
+                'val_csv': 'final_dataset_cnn_val.csv',
+                'test_csv': 'final_dataset_cnn.csv',
+                'image_root': '/mount/civiescaks01storage01/aksfileshare01/CNN/gleamer-images/'
+            },
+            'training': {
+                'batch_size': 8,
+                'num_workers': 4
+            },
+            'model': {
+                'num_classes': 2,
+                'class_names': ['NEGATIVE', 'POSITIVE']
+            }
+        }
 
 class BinaryModelEvaluator:
     """Comprehensive evaluation for binary medical image classification"""
@@ -49,7 +72,7 @@ class BinaryModelEvaluator:
         self.results = {}
         
         # Create results directory
-        os.makedirs(RESULTS_DIR, exist_ok=True)
+        os.makedirs('results', exist_ok=True)
         
         logger.info(f"📊 Binary Model Evaluator initialized for {model_name}")
     
@@ -362,9 +385,13 @@ class BinaryModelEvaluator:
         
         # Create test loader if not provided
         if test_loader is None:
+            config = load_config()
             _, _, test_loader = create_data_loaders(
-                batch_size=TRAINING_CONFIG['batch_size'],
-                num_workers=TRAINING_CONFIG['num_workers'],
+                config['data']['train_csv'],
+                config['data']['val_csv'],
+                config['data']['test_csv'],
+                batch_size=config['training']['batch_size'],
+                num_workers=config['training']['num_workers'],
                 balance_classes=False  # Don't balance for evaluation
             )
         
@@ -393,22 +420,24 @@ def main():
     """Main evaluation function"""
     parser = argparse.ArgumentParser(description='Evaluate binary medical image classifier')
     parser.add_argument('--checkpoint', type=str, 
-                       default=os.path.join(CHECKPOINTS_DIR, 'binary_classifier_best.pth'),
+                       default='checkpoints/binary_classifier_best.pth',
                        help='Path to model checkpoint')
     parser.add_argument('--model-name', type=str, default='binary_classifier',
                        help='Model name for saving results')
     
     args = parser.parse_args()
     
+    # Load configuration
+    config = load_config()
+    
     # Setup device
-    device = torch.device(GPU_CONFIG['device'])
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     
     # Create model
-    model_config = MODEL_CONFIGS['binary_classifier']
     model = create_model(
-        model_type=model_config['model_type'],
-        num_classes=model_config['num_classes'],
-        dropout_rate=model_config['dropout_rate'],
+        model_type='BinaryEfficientNet',
+        num_classes=config['model']['num_classes'],
+        dropout_rate=0.3,
         pretrained=False  # Don't use pretrained for evaluation
     )
     

@@ -89,7 +89,12 @@ dmypy.json
 
 # Data files - exclude from git
 data/
+test/data/
 *.csv
+# Allow specific CNN training files
+!final_dataset_cnn.csv
+!final_dataset_cnn_train.csv
+!final_dataset_cnn_val.csv
 
 # Model checkpoints and results
 checkpoints/
