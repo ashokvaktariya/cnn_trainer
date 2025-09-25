@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
 import pandas as pd
+import numpy as np
 import random
 import logging
 import glob
@@ -104,12 +105,19 @@ def load_model_from_checkpoint(checkpoint_path):
 def preprocess_image(image_path, input_size=600):
     """Preprocess image for inference - matches training preprocessing exactly"""
     try:
-        # Load image and ensure it's RGB
-        image = Image.open(image_path)
+        # Load image EXACTLY like training
+        with Image.open(image_path) as img:
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Convert to numpy array like training
+            image = np.array(img)
         
-        # Convert to RGB if needed (handles grayscale, RGBA, etc.)
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
+        # Convert numpy array to PIL Image for torchvision transforms (EXACTLY like training)
+        if len(image.shape) == 3 and image.shape[2] == 3:  # RGB image
+            image = Image.fromarray(image.astype(np.uint8), 'RGB')
+        else:  # Grayscale image
+            image = Image.fromarray(image.astype(np.uint8), 'L')
         
         # Define transforms EXACTLY like training (validation mode)
         transform = transforms.Compose([
